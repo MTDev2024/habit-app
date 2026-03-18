@@ -1,0 +1,23 @@
+{
+  "tabs": {
+    "today": "Today",
+    "stats": "Statistics",
+    "profile": "Profile"
+  },
+  "today": {
+    "title": "habit-app",
+    "subtitle": "Dashboard — Phase 1",
+    "debugLabel": "Active landscape:",
+    "debugSlot": "Slot",
+    "debugSeason": "Season"
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "Heatmap, charts and streaks — Phase 2"
+  },
+  "profile": {
+    "title": "Profile",
+    "darkMode": "Dark mode",
+    "firebaseNote": "Firebase authentication — Phase 3"
+  }
+}

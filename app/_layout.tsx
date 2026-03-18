@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useThemeStore } from '../store/useThemeStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { COLORS } from '../constants/app';
 
 // Initialise i18n au démarrage de l'app — doit être importé ici, une seule fois
@@ -16,6 +18,13 @@ import '../utils/i18n';
  */
 export default function RootLayout() {
   const { isDarkMode } = useThemeStore();
+  const { init } = useAuthStore();
+
+  // Démarre l'écoute Firebase Auth dès le montage de l'app
+  useEffect(() => {
+    const unsubscribe = init();
+    return unsubscribe; // nettoyage au démontage
+  }, []);
 
   return (
     <>

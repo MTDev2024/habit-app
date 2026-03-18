@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -68,7 +69,13 @@ export default function HabitItem({ habit, onToggle }: HabitItemProps) {
   }));
 
   return (
-    <Pressable onPress={() => onToggle(habit.id)} accessibilityRole="checkbox">
+    <Pressable
+      onPress={() => onToggle(habit.id)}
+      // Long press → navigation vers l'écran d'édition
+      onLongPress={() => router.push(`/habit/${habit.id}`)}
+      delayLongPress={400}
+      accessibilityRole="checkbox"
+    >
       <Animated.View style={[styles.row, rowAnimatedStyle]}>
 
         {/* Checkbox */}

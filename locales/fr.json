@@ -30,6 +30,11 @@
   },
   "profile": {
     "title": "Profil",
+    "planFree": "Plan Gratuit",
+    "planPremium": "Plan Premium ⭐",
+    "habitUsage": "{{count}} / {{max}} habitudes utilisées",
+    "upgrade": "Passer Premium — 2,99€/mois",
+    "settings": "Paramètres",
     "darkMode": "Mode sombre",
     "firebaseNote": "Authentification Firebase — Phase 3"
   },
@@ -45,6 +50,12 @@
     "daily": "Quotidienne",
     "weekly": "Hebdomadaire",
     "create": "Créer l'habitude",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer l'habitude",
+    "deleteConfirm": "Voulez-vous vraiment supprimer \"{{name}}\" ? Cette action est irréversible.",
+    "deleteCancel": "Annuler",
+    "deleteConfirmBtn": "Supprimer",
     "nameRequired": "Le nom est obligatoire",
     "nameTooShort": "Minimum 2 caractères"
   }

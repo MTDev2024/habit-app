@@ -25,6 +25,9 @@ interface HabitsState {
   // Supprimer une habitude par id
   removeHabit: (id: string) => void;
 
+  // Modifier une habitude existante (nom, catégorie, fréquence, couleur)
+  updateHabit: (id: string, changes: Partial<Omit<Habit, 'id' | 'createdAt' | 'completedDates'>>) => void;
+
   // Cocher / décocher une habitude pour la date du jour
   toggleHabit: (id: string) => void;
 
@@ -117,6 +120,13 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   removeHabit: (id) =>
     set((state) => ({
       habits: state.habits.filter((h) => h.id !== id),
+    })),
+
+  updateHabit: (id, changes) =>
+    set((state) => ({
+      habits: state.habits.map((h) =>
+        h.id === id ? { ...h, ...changes } : h
+      ),
     })),
 
   toggleHabit: (id) => {

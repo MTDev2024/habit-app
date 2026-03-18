@@ -30,6 +30,11 @@
   },
   "profile": {
     "title": "Profile",
+    "planFree": "Free Plan",
+    "planPremium": "Premium Plan ⭐",
+    "habitUsage": "{{count}} / {{max}} habits used",
+    "upgrade": "Go Premium — €2.99/month",
+    "settings": "Settings",
     "darkMode": "Dark mode",
     "firebaseNote": "Firebase authentication — Phase 3"
   },
@@ -45,6 +50,12 @@
     "daily": "Daily",
     "weekly": "Weekly",
     "create": "Create habit",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteTitle": "Delete habit",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+    "deleteCancel": "Cancel",
+    "deleteConfirmBtn": "Delete",
     "nameRequired": "Name is required",
     "nameTooShort": "Minimum 2 characters"
   }

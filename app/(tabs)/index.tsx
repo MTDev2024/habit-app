@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
+import { usePremiumStore, FREE_HABIT_LIMIT } from '../../store/usePremiumStore';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 import { formatDisplayDate } from '../../utils/dateUtils';
 import LandscapeHeader from '../../components/LandscapeHeader';
@@ -21,10 +22,13 @@ import HabitItem from '../../components/HabitItem';
 export default function TodayScreen() {
   const { isDarkMode } = useThemeStore();
   const { getTodayHabits, getTodayCompletionRate, toggleHabit } = useHabitsStore();
+  const { isPremium } = usePremiumStore();
   const { t, i18n } = useTranslation();
   const displayDate = formatDisplayDate(new Date(), i18n.language);
 
   const todayHabits = getTodayHabits();
+  const isAtLimit = !isPremium && todayHabits.length >= FREE_HABIT_LIMIT;
+
   const completionRate = getTodayCompletionRate();
   const done = todayHabits.filter(
     (h) => h.completedDates.includes(new Date().toISOString().split('T')[0])
@@ -85,11 +89,15 @@ export default function TodayScreen() {
 
       {/* ── Bouton flottant "+" ── */}
       <Pressable
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+        style={({ pressed }) => [
+          styles.fab,
+          isAtLimit && styles.fabLocked,
+          pressed && styles.fabPressed,
+        ]}
         onPress={() => router.push('/habit/new')}
         accessibilityLabel={t('habit.new')}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Text style={styles.fabIcon}>{isAtLimit ? '🔒' : '+'}</Text>
       </Pressable>
 
     </View>
@@ -158,6 +166,9 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: COLORS.primary,
+  },
+  fabLocked: {
+    backgroundColor: COLORS.textSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     // Ombre

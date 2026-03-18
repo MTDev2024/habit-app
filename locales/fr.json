@@ -27,6 +27,16 @@
   "habit": {
     "new": "Nouvelle habitude",
     "edit": "Modifier l'habitude",
-    "comingSoon": "Création d'habitude — bientôt disponible"
+    "comingSoon": "Création d'habitude — bientôt disponible",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Ex : Méditation, Lire 20 min...",
+    "nameCounter": "{{count}}/50",
+    "categoryLabel": "Catégorie",
+    "frequencyLabel": "Fréquence",
+    "daily": "Quotidienne",
+    "weekly": "Hebdomadaire",
+    "create": "Créer l'habitude",
+    "nameRequired": "Le nom est obligatoire",
+    "nameTooShort": "Minimum 2 caractères"
   }
 }

@@ -27,6 +27,16 @@
   "habit": {
     "new": "New habit",
     "edit": "Edit habit",
-    "comingSoon": "Habit creation — coming soon"
+    "comingSoon": "Habit creation — coming soon",
+    "nameLabel": "Name",
+    "namePlaceholder": "E.g. Meditation, Read 20 min...",
+    "nameCounter": "{{count}}/50",
+    "categoryLabel": "Category",
+    "frequencyLabel": "Frequency",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "create": "Create habit",
+    "nameRequired": "Name is required",
+    "nameTooShort": "Minimum 2 characters"
   }
 }

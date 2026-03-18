@@ -5,11 +5,15 @@
     "profile": "Profil"
   },
   "today": {
-    "title": "habit-app",
     "subtitle": "Dashboard — Phase 1",
     "debugLabel": "Paysage actif :",
     "debugSlot": "Créneau",
-    "debugSeason": "Saison"
+    "debugSeason": "Saison",
+    "habitsTitle": "Habitudes du jour",
+    "completedOf": "{{done}} / {{total}}",
+    "allDone": "Toutes les habitudes complétées !",
+    "noHabits": "Aucune habitude pour aujourd'hui",
+    "addFirst": "Ajoutez votre première habitude"
   },
   "stats": {
     "title": "Statistiques",
@@ -19,5 +23,10 @@
     "title": "Profil",
     "darkMode": "Mode sombre",
     "firebaseNote": "Authentification Firebase — Phase 3"
+  },
+  "habit": {
+    "new": "Nouvelle habitude",
+    "edit": "Modifier l'habitude",
+    "comingSoon": "Création d'habitude — bientôt disponible"
   }
 }

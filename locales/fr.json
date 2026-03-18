@@ -17,7 +17,16 @@
   },
   "stats": {
     "title": "Statistiques",
-    "subtitle": "Heatmap, graphiques et streaks — Phase 2"
+    "subtitle": "Heatmap, graphiques et streaks — Phase 2",
+    "streakTitle": "Streaks",
+    "streakDays_one": "{{count}} jour",
+    "streakDays_other": "{{count}} jours",
+    "streakNone": "Pas encore commencé",
+    "graphTitle": "7 derniers jours",
+    "heatmapTitle": "Ce mois-ci",
+    "premiumTitle": "Feature Premium 🔒",
+    "premiumDesc": "Passez Premium pour accéder aux statistiques avancées.",
+    "upgrade": "Passer Premium"
   },
   "profile": {
     "title": "Profil",

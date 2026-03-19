@@ -23,6 +23,8 @@ export const COLORS = {
   textSecondaryDark: '#A0A0A0',
   border: '#E0E0E0',
   borderDark: '#333333',
+  textLight: '#BDBDBD',
+  error: '#D32F2F',
 } as const;
 
 // Typographie

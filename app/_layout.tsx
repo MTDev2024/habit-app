@@ -8,6 +8,7 @@ import { COLORS } from '../constants/app';
 // Initialise i18n au démarrage de l'app — doit être importé ici, une seule fois
 import '../utils/i18n';
 
+
 /**
  * Layout racine de l'application.
  *

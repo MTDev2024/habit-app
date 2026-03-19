@@ -36,7 +36,31 @@
     "upgrade": "Passer Premium — 2,99€/mois",
     "settings": "Paramètres",
     "darkMode": "Mode sombre",
-    "firebaseNote": "Authentification Firebase — Phase 3"
+    "firebaseNote": "Authentification Firebase — Phase 3",
+    "logoutBtn": "Se déconnecter",
+    "logoutTitle": "Déconnexion",
+    "logoutConfirm": "Voulez-vous vraiment vous déconnecter ?"
+  },
+  "auth": {
+    "tagline": "Construis de meilleures habitudes, chaque jour.",
+    "loginTitle": "Connexion",
+    "registerTitle": "Créer un compte",
+    "emailLabel": "Adresse email",
+    "emailPlaceholder": "votre@email.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Minimum 6 caractères",
+    "loginBtn": "Se connecter",
+    "registerBtn": "Créer mon compte",
+    "noAccount": "Pas encore de compte ?",
+    "alreadyAccount": "Déjà un compte ?",
+    "signUpLink": "S'inscrire",
+    "signInLink": "Se connecter",
+    "errorInvalidEmail": "Adresse email invalide",
+    "errorWrongPassword": "Mot de passe incorrect",
+    "errorUserNotFound": "Aucun compte trouvé pour cet email",
+    "errorEmailInUse": "Cette adresse email est déjà utilisée",
+    "errorWeakPassword": "Le mot de passe doit contenir au moins 6 caractères",
+    "errorGeneric": "Une erreur est survenue. Réessayez."
   },
   "habit": {
     "new": "Nouvelle habitude",

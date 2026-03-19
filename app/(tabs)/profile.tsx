@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import { usePremiumStore, FREE_HABIT_LIMIT } from '../../store/usePremiumStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { logout } from '../../services/auth';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 
 /**
@@ -16,7 +18,13 @@ export default function ProfileScreen() {
   const { isDarkMode, toggleTheme } = useThemeStore();
   const { getTodayHabits } = useHabitsStore();
   const { isPremium } = usePremiumStore();
+  const { user } = useAuthStore();
   const { t } = useTranslation();
+
+  async function handleLogout() {
+    await logout();
+    // La redirection vers /auth/login est automatique via le Redirect dans (tabs)/_layout.tsx
+  }
 
   const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
   const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
@@ -84,10 +92,17 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Phase 3 : déconnexion Firebase */}
-      <Text style={[styles.note, { color: COLORS.textSecondary }]}>
-        {t('profile.firebaseNote')}
-      </Text>
+      {/* Email de l'utilisateur connecté */}
+      {user?.email && (
+        <Text style={[styles.userEmail, { color: COLORS.textSecondary }]}>
+          {user.email}
+        </Text>
+      )}
+
+      {/* Bouton déconnexion */}
+      <Pressable style={styles.logoutBtn} onPress={handleLogout}>
+        <Text style={styles.logoutBtnText}>{t('profile.logoutBtn')}</Text>
+      </Pressable>
 
     </View>
   );
@@ -186,5 +201,21 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSizeSM,
     textAlign: 'center',
     marginTop: SPACING.sm,
+  },
+  userEmail: {
+    fontSize: TYPOGRAPHY.fontSizeSM,
+    textAlign: 'center',
+  },
+  logoutBtn: {
+    borderWidth: 1,
+    borderColor: COLORS.error,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.sm,
+    alignItems: 'center',
+  },
+  logoutBtnText: {
+    color: COLORS.error,
+    fontSize: TYPOGRAPHY.fontSizeMD,
+    fontWeight: TYPOGRAPHY.fontWeightMedium,
   },
 });

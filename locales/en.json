@@ -36,7 +36,31 @@
     "upgrade": "Go Premium — €2.99/month",
     "settings": "Settings",
     "darkMode": "Dark mode",
-    "firebaseNote": "Firebase authentication — Phase 3"
+    "firebaseNote": "Firebase authentication — Phase 3",
+    "logoutBtn": "Sign out",
+    "logoutTitle": "Sign out",
+    "logoutConfirm": "Are you sure you want to sign out?"
+  },
+  "auth": {
+    "tagline": "Build better habits, every day.",
+    "loginTitle": "Sign in",
+    "registerTitle": "Create an account",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "your@email.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Minimum 6 characters",
+    "loginBtn": "Sign in",
+    "registerBtn": "Create my account",
+    "noAccount": "No account yet?",
+    "alreadyAccount": "Already have an account?",
+    "signUpLink": "Sign up",
+    "signInLink": "Sign in",
+    "errorInvalidEmail": "Invalid email address",
+    "errorWrongPassword": "Wrong password",
+    "errorUserNotFound": "No account found for this email",
+    "errorEmailInUse": "This email address is already in use",
+    "errorWeakPassword": "Password must be at least 6 characters",
+    "errorGeneric": "An error occurred. Please try again."
   },
   "habit": {
     "new": "New habit",

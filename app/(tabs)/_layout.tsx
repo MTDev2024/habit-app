@@ -1,6 +1,7 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { COLORS } from '../../constants/app';
 
 /**
@@ -15,6 +16,13 @@ import { COLORS } from '../../constants/app';
 export default function TabsLayout() {
   const { isDarkMode } = useThemeStore();
   const { t } = useTranslation();
+  const { user, isLoading } = useAuthStore();
+
+  // Tant que Firebase vérifie la session, on attend (évite un flash)
+  if (isLoading) return null;
+
+  // Non connecté → écran de connexion
+  if (!user) return <Redirect href="/auth/login" />;
 
   const tabBarBackground = isDarkMode ? COLORS.surfaceDark : COLORS.background;
   const tabBarActive = COLORS.primary;

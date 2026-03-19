@@ -38,7 +38,7 @@ export const isCompletedToday = (completedDates: string[]): boolean => {
 };
 
 /**
- * Calcule le streak actuel d'une habitude (jours consécutifs jusqu'à aujourd'hui).
+ * Calcule le streak actuel d'une habitude quotidienne (jours consécutifs).
  */
 export const getCurrentStreak = (completedDates: string[]): number => {
   if (completedDates.length === 0) return 0;
@@ -57,6 +57,61 @@ export const getCurrentStreak = (completedDates: string[]): number => {
       current.setDate(current.getDate() - 1);
     } else {
       break;
+    }
+  }
+
+  return streak;
+};
+
+/**
+ * Calcule le streak actuel d'une habitude hebdomadaire.
+ *
+ * Logique : on génère toutes les occurrences prévues dans le passé
+ * (dates où le jour de la semaine est dans weekDays), puis on remonte
+ * depuis la plus récente en comptant les occurrences consécutives complétées.
+ *
+ * Le streak ne casse pas si aujourd'hui n'est pas un jour prévu.
+ *
+ * @param completedDates - Liste de dates YYYY-MM-DD où l'habitude a été faite
+ * @param weekDays - Jours actifs (0=lundi, 6=dimanche, convention EU)
+ */
+export const getCurrentStreakWeekly = (
+  completedDates: string[],
+  weekDays: number[]
+): number => {
+  if (completedDates.length === 0 || weekDays.length === 0) return 0;
+
+  const completedSet = new Set(completedDates);
+
+  // Génère toutes les occurrences prévues des 365 derniers jours (limite raisonnable)
+  const scheduled: string[] = [];
+  // Midi local évite les ambiguïtés de fuseau horaire et DST
+  const cursor = new Date();
+  cursor.setHours(12, 0, 0, 0);
+
+  for (let i = 0; i < 365; i++) {
+    const jsDay = cursor.getDay(); // 0=dim, 1=lun, ...
+    const dayEU = jsDay === 0 ? 6 : jsDay - 1; // 0=lun, 6=dim
+
+    if (weekDays.includes(dayEU)) {
+      // Utilise les méthodes locales (pas toISOString) pour éviter le décalage UTC
+      const y = cursor.getFullYear();
+      const m = String(cursor.getMonth() + 1).padStart(2, '0');
+      const d = String(cursor.getDate()).padStart(2, '0');
+      scheduled.push(`${y}-${m}-${d}`);
+    }
+
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  // scheduled est déjà trié du plus récent au plus ancien
+  // On compte les occurrences consécutives complétées depuis la plus récente
+  let streak = 0;
+  for (const date of scheduled) {
+    if (completedSet.has(date)) {
+      streak++;
+    } else {
+      break; // première occurrence ratée → on arrête
     }
   }
 

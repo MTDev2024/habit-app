@@ -34,6 +34,7 @@ export default function NewHabitScreen() {
       name: values.name,
       category: values.category,
       frequency: values.frequency,
+      weekDays: values.weekDays,
       color: getCategoryByKey(values.category).color,
       completedDates: [],
       isPremiumFeature: false,

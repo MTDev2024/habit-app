@@ -20,10 +20,12 @@ export interface HabitFormValues {
   name: string;
   category: CategoryKey;
   frequency: 'daily' | 'weekly';
+  // Jours actifs (0=lundi, 6=dimanche) — uniquement si frequency === 'weekly'
+  weekDays: number[];
 }
 
 interface HabitFormProps {
-  // Valeurs initiales (mode édition) — défaut : health + daily
+  // Valeurs initiales (mode édition) — défaut : health + daily + aucun jour
   initialValues?: Partial<HabitFormValues>;
   // Label du bouton de soumission (varie selon création / édition)
   submitLabel: string;
@@ -54,13 +56,25 @@ export default function HabitForm({ initialValues, submitLabel, onSubmit }: Habi
   const [name, setName] = useState(initialValues?.name ?? '');
   const [category, setCategory] = useState<CategoryKey>(initialValues?.category ?? 'health');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>(initialValues?.frequency ?? 'daily');
+  const [weekDays, setWeekDays] = useState<number[]>(initialValues?.weekDays ?? []);
   const [nameError, setNameError] = useState('');
+  const [weekDaysError, setWeekDaysError] = useState('');
 
   const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
   const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
   const surfaceColor = isDarkMode ? COLORS.surfaceDark : COLORS.surface;
   const borderColor = isDarkMode ? COLORS.borderDark : COLORS.border;
   const selectedCategory = CATEGORIES.find((c) => c.key === category)!;
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  // Bascule un jour dans la sélection (ajoute ou retire l'index)
+  const toggleDay = (dayIndex: number) => {
+    setWeekDays((prev) =>
+      prev.includes(dayIndex) ? prev.filter((d) => d !== dayIndex) : [...prev, dayIndex]
+    );
+    if (weekDaysError) setWeekDaysError('');
+  };
 
   // ── Validation ────────────────────────────────────────────────────────────
   const validate = (): boolean => {
@@ -74,6 +88,12 @@ export default function HabitForm({ initialValues, submitLabel, onSubmit }: Habi
       return false;
     }
     setNameError('');
+
+    if (frequency === 'weekly' && weekDays.length === 0) {
+      setWeekDaysError(t('habit.weekDaysRequired'));
+      return false;
+    }
+    setWeekDaysError('');
     return true;
   };
 
@@ -83,6 +103,7 @@ export default function HabitForm({ initialValues, submitLabel, onSubmit }: Habi
       name: name.trim(),
       category,
       frequency,
+      weekDays: frequency === 'weekly' ? weekDays : [],
     });
   };
 
@@ -185,6 +206,39 @@ export default function HabitForm({ initialValues, submitLabel, onSubmit }: Habi
           </View>
         </View>
 
+        {/* ── Sélecteur de jours (visible uniquement si hebdomadaire) ── */}
+        {frequency === 'weekly' && (
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: textColor }]}>{t('habit.weekDaysLabel')}</Text>
+            <View style={styles.daysRow}>
+              {(t('habit.days', { returnObjects: true }) as string[]).map((label, index) => {
+                const isSelected = weekDays.includes(index);
+                return (
+                  <Pressable
+                    key={index}
+                    style={[
+                      styles.dayBtn,
+                      { borderColor: selectedCategory.color },
+                      isSelected && { backgroundColor: selectedCategory.color },
+                    ]}
+                    onPress={() => toggleDay(index)}
+                  >
+                    <Text
+                      style={[
+                        styles.dayLabel,
+                        { color: isSelected ? '#FFFFFF' : selectedCategory.color },
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {weekDaysError ? <Text style={styles.error}>{weekDaysError}</Text> : null}
+          </View>
+        )}
+
         {/* ── Bouton de soumission ── */}
         <Pressable
           style={({ pressed }) => [
@@ -283,6 +337,25 @@ const styles = StyleSheet.create({
   toggleText: {
     fontSize: TYPOGRAPHY.fontSizeMD,
     fontWeight: TYPOGRAPHY.fontWeightMedium,
+  },
+
+  // ── Jours de la semaine ──
+  daysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: SPACING.xs,
+  },
+  dayBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.full,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayLabel: {
+    fontSize: TYPOGRAPHY.fontSizeSM,
+    fontWeight: TYPOGRAPHY.fontWeightBold,
   },
 
   // ── Soumission ──

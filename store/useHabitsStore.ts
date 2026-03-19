@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { CategoryKey } from '../constants/categories';
-import { getTodayKey } from '../utils/dateUtils';
-import { getCurrentStreak } from '../utils/dateUtils';
+import { getTodayKey, getCurrentStreak, getCurrentStreakWeekly } from '../utils/dateUtils';
 import {
   fetchHabits,
   saveHabit,
@@ -21,6 +20,8 @@ export interface Habit {
   category: CategoryKey;
   color: string;
   frequency: 'daily' | 'weekly';
+  // Jours actifs pour les habitudes hebdomadaires (0=lundi, 6=dimanche, convention EU)
+  weekDays?: number[];
   completedDates: string[]; // liste de dates YYYY-MM-DD
   isPremiumFeature: boolean;
   createdAt: number; // timestamp ms
@@ -127,13 +128,24 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     // Analytics uniquement à la complétion (pas au décoché)
     if (!already) {
       logHabitCompleted(habit.name, habit.category);
-      const streak = getCurrentStreak(newDates);
+      const streak = habit.frequency === 'weekly'
+        ? getCurrentStreakWeekly(newDates, habit.weekDays ?? [])
+        : getCurrentStreak(newDates);
       logStreakMilestone(habit.name, streak);
     }
   },
 
-  getTodayHabits: () =>
-    get().habits.filter((h) => h.frequency === 'daily'),
+  getTodayHabits: () => {
+    // Jour de la semaine courant en convention EU (0=lundi, 6=dimanche)
+    const jsDay = new Date().getDay(); // 0=dim, 1=lun, ...
+    const todayEU = jsDay === 0 ? 6 : jsDay - 1;
+
+    return get().habits.filter((h) => {
+      if (h.frequency === 'daily') return true;
+      if (h.frequency === 'weekly') return (h.weekDays ?? []).includes(todayEU);
+      return false;
+    });
+  },
 
   getTodayCompletionRate: () => {
     const daily = get().getTodayHabits();

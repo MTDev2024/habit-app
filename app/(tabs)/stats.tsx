@@ -5,7 +5,7 @@ import { useHabitsStore } from '../../store/useHabitsStore';
 import { usePremiumStore } from '../../store/usePremiumStore';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 import { getLast7DaysStats, getMonthCompletionMap, getDayLabel } from '../../utils/statsUtils';
-import { getCurrentStreak } from '../../utils/dateUtils';
+import { getCurrentStreak, getCurrentStreakWeekly } from '../../utils/dateUtils';
 import StatGraph from '../../components/StatGraph';
 import HeatmapCalendar from '../../components/HeatmapCalendar';
 
@@ -31,7 +31,6 @@ export default function StatsScreen() {
   const surfaceColor = isDarkMode ? COLORS.surfaceDark : COLORS.surface;
   const lang = i18n.language;
 
-  const dailyHabits = habits.filter((h) => h.frequency === 'daily');
   const last7Stats = getLast7DaysStats(habits);
   const dayLabels = last7Stats.map((d) => getDayLabel(d.date, lang));
   const monthMap = getMonthCompletionMap(habits);
@@ -48,11 +47,13 @@ export default function StatsScreen() {
           <Text style={[styles.sectionTitle, { color: textColor }]}>
             {t('stats.streakTitle')}
           </Text>
-          {dailyHabits.length === 0 ? (
+          {habits.length === 0 ? (
             <Text style={styles.emptyText}>{t('today.noHabits')}</Text>
           ) : (
-            dailyHabits.map((habit) => {
-              const streak = getCurrentStreak(habit.completedDates);
+            habits.map((habit) => {
+              const streak = habit.frequency === 'weekly'
+                ? getCurrentStreakWeekly(habit.completedDates, habit.weekDays ?? [])
+                : getCurrentStreak(habit.completedDates);
               return (
                 <View key={habit.id} style={styles.streakRow}>
                   {/* Indicateur couleur catégorie */}

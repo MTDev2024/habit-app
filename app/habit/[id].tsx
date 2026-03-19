@@ -1,5 +1,4 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import { getCategoryByKey } from '../../constants/categories';
@@ -31,27 +30,17 @@ export default function EditHabitScreen() {
       name: values.name,
       category: values.category,
       frequency: values.frequency,
+      weekDays: values.weekDays,
       color: getCategoryByKey(values.category).color,
     });
     router.back();
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      t('habit.deleteTitle'),
-      t('habit.deleteConfirm', { name: habit.name }),
-      [
-        { text: t('habit.deleteCancel'), style: 'cancel' },
-        {
-          text: t('habit.deleteConfirmBtn'),
-          style: 'destructive',
-          onPress: () => {
-            removeHabit(id);
-            router.back();
-          },
-        },
-      ],
-    );
+    // Phase 5 : remplacer par une modale de confirmation élégante
+    // Alert.alert ne fonctionne pas sur web
+    removeHabit(id);
+    router.back();
   };
 
   return (
@@ -73,6 +62,7 @@ export default function EditHabitScreen() {
           name: habit.name,
           category: habit.category,
           frequency: habit.frequency,
+          weekDays: habit.weekDays ?? [],
         }}
         submitLabel={t('habit.save')}
         onSubmit={handleSubmit}

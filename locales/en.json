@@ -81,6 +81,9 @@
     "deleteCancel": "Cancel",
     "deleteConfirmBtn": "Delete",
     "nameRequired": "Name is required",
-    "nameTooShort": "Minimum 2 characters"
+    "nameTooShort": "Minimum 2 characters",
+    "weekDaysLabel": "Days of the week",
+    "weekDaysRequired": "Select at least one day",
+    "days": ["M", "T", "W", "T", "F", "S", "S"]
   }
 }

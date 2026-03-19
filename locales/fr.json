@@ -81,6 +81,9 @@
     "deleteCancel": "Annuler",
     "deleteConfirmBtn": "Supprimer",
     "nameRequired": "Le nom est obligatoire",
-    "nameTooShort": "Minimum 2 caractères"
+    "nameTooShort": "Minimum 2 caractères",
+    "weekDaysLabel": "Jours de la semaine",
+    "weekDaysRequired": "Sélectionnez au moins un jour",
+    "days": ["L", "M", "M", "J", "V", "S", "D"]
   }
 }

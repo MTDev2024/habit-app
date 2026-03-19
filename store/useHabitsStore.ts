@@ -1,7 +1,18 @@
 import { create } from 'zustand';
 import { CategoryKey } from '../constants/categories';
-import { CATEGORY_COLORS } from '../constants/app';
 import { getTodayKey } from '../utils/dateUtils';
+import { getCurrentStreak } from '../utils/dateUtils';
+import {
+  fetchHabits,
+  saveHabit,
+  patchHabit,
+  deleteHabit,
+} from '../services/habits';
+import {
+  logHabitCompleted,
+  logHabitCreated,
+  logStreakMilestone,
+} from '../services/analytics';
 
 // ── Type d'une habitude ──────────────────────────────────────────────────────
 export interface Habit {
@@ -18,131 +29,107 @@ export interface Habit {
 // ── Actions et sélecteurs du store ──────────────────────────────────────────
 interface HabitsState {
   habits: Habit[];
+  isLoading: boolean;
+  // userId courant — nécessaire pour écrire dans Firestore sans passer par useAuthStore
+  userId: string | null;
 
-  // Ajouter une nouvelle habitude
-  addHabit: (habit: Omit<Habit, 'id' | 'createdAt'>) => void;
+  // Charge les habitudes depuis Firestore au login
+  loadHabits: (userId: string) => Promise<void>;
 
-  // Supprimer une habitude par id
-  removeHabit: (id: string) => void;
+  // Réinitialise le store à la déconnexion
+  clearHabits: () => void;
 
-  // Modifier une habitude existante (nom, catégorie, fréquence, couleur)
-  updateHabit: (id: string, changes: Partial<Omit<Habit, 'id' | 'createdAt' | 'completedDates'>>) => void;
+  addHabit: (habit: Omit<Habit, 'id' | 'createdAt'>) => Promise<void>;
+  removeHabit: (id: string) => Promise<void>;
+  updateHabit: (id: string, changes: Partial<Omit<Habit, 'id' | 'createdAt' | 'completedDates'>>) => Promise<void>;
+  toggleHabit: (id: string) => Promise<void>;
 
-  // Cocher / décocher une habitude pour la date du jour
-  toggleHabit: (id: string) => void;
-
-  // Retourner les habitudes du jour (quotidiennes)
   getTodayHabits: () => Habit[];
-
-  // Retourner le taux de complétion du jour (0 à 1)
   getTodayCompletionRate: () => number;
 }
 
-// ── Données d'exemple issues de la liste des 50 habitudes (CLAUDE.md) ────────
-const SAMPLE_HABITS: Habit[] = [
-  {
-    id: '1',
-    name: 'Boire de l\'eau',
-    category: 'health',
-    color: CATEGORY_COLORS.health,
-    frequency: 'daily',
-    completedDates: [],
-    isPremiumFeature: false,
-    createdAt: Date.now(),
-  },
-  {
-    id: '2',
-    name: 'Méditation',
-    category: 'health',
-    color: CATEGORY_COLORS.health,
-    frequency: 'daily',
-    completedDates: [],
-    isPremiumFeature: false,
-    createdAt: Date.now(),
-  },
-  {
-    id: '3',
-    name: 'Lire 20 min',
-    category: 'personal',
-    color: CATEGORY_COLORS.personal,
-    frequency: 'daily',
-    completedDates: [],
-    isPremiumFeature: false,
-    createdAt: Date.now(),
-  },
-  {
-    id: '4',
-    name: 'Sport 20 min',
-    category: 'health',
-    color: CATEGORY_COLORS.health,
-    frequency: 'daily',
-    completedDates: [],
-    isPremiumFeature: false,
-    createdAt: Date.now(),
-  },
-  {
-    id: '5',
-    name: 'Planifier sa journée',
-    category: 'productivity',
-    color: CATEGORY_COLORS.productivity,
-    frequency: 'daily',
-    completedDates: [],
-    isPremiumFeature: false,
-    createdAt: Date.now(),
-  },
-];
-
 // ── Store Zustand ────────────────────────────────────────────────────────────
-/**
- * Store principal des habitudes.
- *
- * Phase 2 : données locales uniquement (pas de Firebase).
- * Phase 3 : on ajoutera la persistance Firestore et la sync multi-appareils.
- *
- * Utilisation dans un composant :
- *   const { habits, toggleHabit, getTodayCompletionRate } = useHabitsStore();
- */
 export const useHabitsStore = create<HabitsState>((set, get) => ({
-  habits: SAMPLE_HABITS,
+  habits: [],
+  isLoading: false,
+  userId: null,
 
-  addHabit: (habit) =>
-    set((state) => ({
-      habits: [
-        ...state.habits,
-        {
-          ...habit,
-          id: String(Date.now()),
-          createdAt: Date.now(),
-        },
-      ],
-    })),
+  /**
+   * Appelé juste après la connexion Firebase.
+   * Récupère les habitudes Firestore et les charge dans le store local.
+   */
+  loadHabits: async (userId: string) => {
+    set({ isLoading: true, userId });
+    try {
+      const habits = await fetchHabits(userId);
+      set({ habits });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-  removeHabit: (id) =>
-    set((state) => ({
-      habits: state.habits.filter((h) => h.id !== id),
-    })),
+  /**
+   * Vide le store à la déconnexion — évite que les données
+   * d'un utilisateur soient visibles après logout.
+   */
+  clearHabits: () => set({ habits: [], userId: null }),
 
-  updateHabit: (id, changes) =>
+  addHabit: async (habit) => {
+    const { userId } = get();
+    const newHabit: Habit = {
+      ...habit,
+      id: String(Date.now()),
+      createdAt: Date.now(),
+    };
+    // Mise à jour optimiste : l'UI réagit immédiatement
+    set((state) => ({ habits: [...state.habits, newHabit] }));
+    // Persistance Firestore + analytics en arrière-plan
+    if (userId) await saveHabit(userId, newHabit);
+    logHabitCreated(newHabit.name, newHabit.category);
+  },
+
+  removeHabit: async (id) => {
+    const { userId } = get();
+    set((state) => ({ habits: state.habits.filter((h) => h.id !== id) }));
+    if (userId) await deleteHabit(userId, id);
+  },
+
+  updateHabit: async (id, changes) => {
+    const { userId } = get();
     set((state) => ({
       habits: state.habits.map((h) =>
         h.id === id ? { ...h, ...changes } : h
       ),
-    })),
-
-  toggleHabit: (id) => {
-    const today = getTodayKey();
-    set((state) => ({
-      habits: state.habits.map((h) => {
-        if (h.id !== id) return h;
-        const already = h.completedDates.includes(today);
-        return {
-          ...h,
-          completedDates: already
-            ? h.completedDates.filter((d) => d !== today) // décocher
-            : [...h.completedDates, today],               // cocher
-        };
-      }),
     }));
+    if (userId) await patchHabit(userId, id, changes);
+  },
+
+  toggleHabit: async (id) => {
+    const today = getTodayKey();
+    const { userId } = get();
+
+    const habit = get().habits.find((h) => h.id === id);
+    if (!habit) return;
+
+    const already = habit.completedDates.includes(today);
+    const newDates = already
+      ? habit.completedDates.filter((d) => d !== today)
+      : [...habit.completedDates, today];
+
+    set((state) => ({
+      habits: state.habits.map((h) =>
+        h.id === id ? { ...h, completedDates: newDates } : h
+      ),
+    }));
+
+    if (userId) await patchHabit(userId, id, { completedDates: newDates });
+
+    // Analytics uniquement à la complétion (pas au décoché)
+    if (!already) {
+      logHabitCompleted(habit.name, habit.category);
+      const streak = getCurrentStreak(newDates);
+      logStreakMilestone(habit.name, streak);
+    }
   },
 
   getTodayHabits: () =>

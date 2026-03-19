@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useHabitsStore } from '../../store/useHabitsStore';
 import { COLORS } from '../../constants/app';
 
 /**
@@ -17,6 +19,16 @@ export default function TabsLayout() {
   const { isDarkMode } = useThemeStore();
   const { t } = useTranslation();
   const { user, isLoading } = useAuthStore();
+  const { loadHabits, clearHabits } = useHabitsStore();
+
+  // Charge les habitudes dès que l'utilisateur est connu, les vide au logout
+  useEffect(() => {
+    if (user) {
+      loadHabits(user.uid);
+    } else {
+      clearHabits();
+    }
+  }, [user?.uid]);
 
   // Tant que Firebase vérifie la session, on attend (évite un flash)
   if (isLoading) return null;

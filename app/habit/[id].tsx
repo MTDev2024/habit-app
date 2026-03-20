@@ -1,25 +1,28 @@
+import { useState } from 'react';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Pressable, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useHabitsStore } from '../../store/useHabitsStore';
+import { useToastStore } from '../../store/useToastStore';
 import { getCategoryByKey } from '../../constants/categories';
 import HabitForm, { HabitFormValues } from '../../components/HabitForm';
+import ConfirmModal from '../../components/ConfirmModal';
+import { COLORS } from '../../constants/app';
 
 /**
- * Écran de modification d'une habitude existante.
- *
- * Expo Router injecte l'`id` depuis l'URL (ex : /habit/42).
- * Le formulaire est pré-rempli avec les valeurs actuelles de l'habitude.
- * Un bouton "Supprimer" dans le header permet de la retirer définitivement.
+ * Écran d'édition d'une habitude existante.
+ * Long press depuis HabitItem → cet écran.
+ * Bouton "Supprimer" dans le header → modale de confirmation.
  */
 export default function EditHabitScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { habits, updateHabit, removeHabit } = useHabitsStore();
+  const { show } = useToastStore();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  // Recherche de l'habitude dans le store
   const habit = habits.find((h) => h.id === id);
 
-  // Si l'habitude n'existe plus (supprimée entre-temps), on revient en arrière
   if (!habit) {
     router.back();
     return null;
@@ -28,18 +31,20 @@ export default function EditHabitScreen() {
   const handleSubmit = (values: HabitFormValues) => {
     updateHabit(id, {
       name: values.name,
+      description: values.description,
       category: values.category,
       frequency: values.frequency,
       weekDays: values.weekDays,
+      reminderTime: values.reminderTime,
       color: getCategoryByKey(values.category).color,
     });
+    show(t('today.habitUpdated'), 'success');
     router.back();
   };
 
   const handleDelete = () => {
-    // Phase 5 : remplacer par une modale de confirmation élégante
-    // Alert.alert ne fonctionne pas sur web
     removeHabit(id);
+    show(t('today.habitDeleted'), 'info');
     router.back();
   };
 
@@ -50,9 +55,15 @@ export default function EditHabitScreen() {
           title: t('habit.edit'),
           headerShown: true,
           headerBackTitle: '',
-          // Bouton "Supprimer" dans le header à droite
           headerRight: () => (
-            <DeleteButton onPress={handleDelete} label={t('habit.delete')} />
+            <Pressable
+              onPress={() => setDeleteModalVisible(true)}
+              style={{ paddingHorizontal: 8 }}
+            >
+              <Text style={{ color: COLORS.error, fontSize: 15, fontWeight: '500' }}>
+                {t('habit.delete')}
+              </Text>
+            </Pressable>
           ),
         }}
       />
@@ -60,24 +71,26 @@ export default function EditHabitScreen() {
       <HabitForm
         initialValues={{
           name: habit.name,
+          description: habit.description ?? '',
           category: habit.category,
           frequency: habit.frequency,
           weekDays: habit.weekDays ?? [],
+          reminderTime: habit.reminderTime ?? '',
         }}
         submitLabel={t('habit.save')}
         onSubmit={handleSubmit}
       />
+
+      <ConfirmModal
+        visible={deleteModalVisible}
+        title={t('habit.deleteTitle')}
+        message={t('habit.deleteConfirm', { name: habit.name })}
+        confirmLabel={t('habit.deleteConfirmBtn')}
+        cancelLabel={t('habit.deleteCancel')}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModalVisible(false)}
+        destructive
+      />
     </>
-  );
-}
-
-// ── Bouton suppression dans le header ────────────────────────────────────────
-import { Pressable, Text } from 'react-native';
-
-function DeleteButton({ onPress, label }: { onPress: () => void; label: string }) {
-  return (
-    <Pressable onPress={onPress} style={{ paddingHorizontal: 8 }}>
-      <Text style={{ color: '#E53935', fontSize: 15, fontWeight: '500' }}>{label}</Text>
-    </Pressable>
   );
 }

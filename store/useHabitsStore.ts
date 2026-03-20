@@ -25,6 +25,9 @@ export interface Habit {
   completedDates: string[]; // liste de dates YYYY-MM-DD
   isPremiumFeature: boolean;
   createdAt: number; // timestamp ms
+  // Champs optionnels ajoutés Phase 2b
+  description?: string;       // note libre sur l'habitude
+  reminderTime?: string;      // format "HH:MM" — utilisé en Phase 4 (notifications)
 }
 
 // ── Actions et sélecteurs du store ──────────────────────────────────────────

@@ -13,7 +13,19 @@
     "completedOf": "{{done}} / {{total}}",
     "allDone": "All habits completed!",
     "noHabits": "No habits for today",
-    "addFirst": "Add your first habit"
+    "addFirst": "Add your first habit",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingNight": "Good night",
+    "motivationStart": "Ready to build great habits?",
+    "motivationKeepGoing": "Good start, keep going!",
+    "motivationAlmostThere": "Almost there, you've got this!",
+    "motivationDone": "Amazing, all habits completed!",
+    "habitCreated": "Habit created",
+    "habitUpdated": "Changes saved",
+    "habitDeleted": "Habit deleted",
+    "limitReached": "Limit reached — upgrade to Premium for more habits"
   },
   "stats": {
     "title": "Statistics",
@@ -84,6 +96,12 @@
     "nameTooShort": "Minimum 2 characters",
     "weekDaysLabel": "Days of the week",
     "weekDaysRequired": "Select at least one day",
-    "days": ["M", "T", "W", "T", "F", "S", "S"]
+    "days": ["M", "T", "W", "T", "F", "S", "S"],
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Why this habit? (optional)",
+    "reminderLabel": "Reminder",
+    "reminderHint": "Available with notifications (Phase 4)",
+    "reminderNone": "No reminder",
+    "reminderAt": "Reminder at"
   }
 }

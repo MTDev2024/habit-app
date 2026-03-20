@@ -1,4 +1,7 @@
 import { useEffect } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+// View gardé pour les spinners de chargement uniquement
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
@@ -7,21 +10,15 @@ import { useHabitsStore } from '../../store/useHabitsStore';
 import { COLORS } from '../../constants/app';
 
 /**
- * Layout de navigation par onglets (bottom tabs).
- *
- * Expo Router mappe automatiquement chaque fichier dans ce dossier (tabs)
- * à un onglet. Les 3 onglets sont : Today (index), Stats, Profile.
- *
- * Pourquoi des tabs en bas ? C'est le pattern dominant sur mobile Android/iOS
- * pour les apps avec 3–5 sections principales — accès rapide en un pouce.
+ * Layout de navigation par onglets.
+ * Gère : auth guard, chargement Firestore, tab bar stylée, toast global.
  */
 export default function TabsLayout() {
   const { isDarkMode } = useThemeStore();
   const { t } = useTranslation();
-  const { user, isLoading } = useAuthStore();
-  const { loadHabits, clearHabits } = useHabitsStore();
+  const { user, isLoading: authLoading } = useAuthStore();
+  const { loadHabits, clearHabits, isLoading: habitsLoading } = useHabitsStore();
 
-  // Charge les habitudes dès que l'utilisateur est connu, les vide au logout
   useEffect(() => {
     if (user) {
       loadHabits(user.uid);
@@ -30,55 +27,87 @@ export default function TabsLayout() {
     }
   }, [user?.uid]);
 
-  // Tant que Firebase vérifie la session, on attend (évite un flash)
-  if (isLoading) return null;
+  // Spinner pendant la vérification Firebase Auth
+  if (authLoading) {
+    return (
+      <View style={[styles.loader, { backgroundColor: COLORS.background }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
 
-  // Non connecté → écran de connexion
   if (!user) return <Redirect href="/auth/login" />;
+
+  // Spinner pendant le chargement initial des habitudes Firestore
+  if (habitsLoading) {
+    return (
+      <View style={[styles.loader, { backgroundColor: isDarkMode ? COLORS.backgroundDark : COLORS.background }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
 
   const tabBarBackground = isDarkMode ? COLORS.surfaceDark : COLORS.background;
   const tabBarActive = COLORS.primary;
   const tabBarInactive = isDarkMode ? COLORS.textSecondaryDark : COLORS.textSecondary;
+  const borderColor = isDarkMode ? COLORS.borderDark : COLORS.border;
 
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: tabBarBackground,
-          borderTopColor: isDarkMode ? COLORS.borderDark : COLORS.border,
-          borderTopWidth: 1,
-          elevation: 0,
-        },
-        tabBarActiveTintColor: tabBarActive,
-        tabBarInactiveTintColor: tabBarInactive,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t('tabs.today'),
-          tabBarIcon: () => null,
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: tabBarBackground,
+            borderTopColor: borderColor,
+            borderTopWidth: 1,
+            elevation: 0,
+            paddingBottom: 10,
+            paddingTop: 8,
+          },
+          tabBarActiveTintColor: tabBarActive,
+          tabBarInactiveTintColor: tabBarInactive,
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
+          },
         }}
-      />
-      <Tabs.Screen
-        name="stats"
-        options={{
-          title: t('tabs.stats'),
-          tabBarIcon: () => null,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: t('tabs.profile'),
-          tabBarIcon: () => null,
-        }}
-      />
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: t('tabs.today'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="today-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="stats"
+          options={{
+            title: t('tabs.stats'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="bar-chart-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: t('tabs.profile'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="person-outline" size={size} color={color} />
+            ),
+          }}
+        />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

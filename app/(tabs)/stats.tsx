@@ -11,14 +11,9 @@ import HeatmapCalendar from '../../components/HeatmapCalendar';
 
 /**
  * Écran Statistiques.
- *
- * Trois sections :
- *  - Streaks    : visibles pour tous (gratuit + premium)
- *  - Graphique  : 7 derniers jours — premium uniquement
- *  - Heatmap    : mois en cours — premium uniquement
- *
- * Les sections premium sont affichées en aperçu flouté + overlay cadenas.
- * Phase 5 : l'overlay ouvrira la modale paywall Google Play Billing.
+ * - Streaks : cards visuelles avec barre de couleur + streak mis en avant
+ * - Graphique 7 jours : premium
+ * - Heatmap mensuelle : premium
  */
 export default function StatsScreen() {
   const { isDarkMode } = useThemeStore();
@@ -39,46 +34,65 @@ export default function StatsScreen() {
     <View style={[styles.screen, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Titre */}
         <Text style={[styles.title, { color: textColor }]}>{t('stats.title')}</Text>
 
-        {/* ── Section Streaks (visible pour tous) ── */}
-        <View style={[styles.card, { backgroundColor: surfaceColor }]}>
-          <Text style={[styles.sectionTitle, { color: textColor }]}>
-            {t('stats.streakTitle')}
-          </Text>
-          {habits.length === 0 ? (
-            <Text style={styles.emptyText}>{t('today.noHabits')}</Text>
-          ) : (
-            habits.map((habit) => {
-              const streak = habit.frequency === 'weekly'
-                ? getCurrentStreakWeekly(habit.completedDates, habit.weekDays ?? [])
-                : getCurrentStreak(habit.completedDates);
-              return (
-                <View key={habit.id} style={styles.streakRow}>
-                  {/* Indicateur couleur catégorie */}
-                  <View style={[styles.streakDot, { backgroundColor: habit.color }]} />
+        {/* ── Streaks ── */}
+        <Text style={[styles.sectionLabel, { color: COLORS.textSecondary }]}>
+          {t('stats.streakTitle').toUpperCase()}
+        </Text>
+
+        {habits.length === 0 ? (
+          <View style={[styles.emptyCard, { backgroundColor: surfaceColor }]}>
+            <Text style={[styles.emptyText, { color: COLORS.textSecondary }]}>{t('today.noHabits')}</Text>
+          </View>
+        ) : (
+          habits.map((habit) => {
+            const streak = habit.frequency === 'weekly'
+              ? getCurrentStreakWeekly(habit.completedDates, habit.weekDays ?? [])
+              : getCurrentStreak(habit.completedDates);
+
+            return (
+              <View key={habit.id} style={[styles.streakCard, { backgroundColor: surfaceColor }]}>
+                {/* Barre de couleur à gauche */}
+                <View style={[styles.streakBar, { backgroundColor: habit.color }]} />
+
+                {/* Info habitude */}
+                <View style={styles.streakInfo}>
                   <Text style={[styles.streakName, { color: textColor }]} numberOfLines={1}>
                     {habit.name}
                   </Text>
-                  <View style={styles.streakBadge}>
-                    <Text style={styles.streakEmoji}>{streak > 0 ? '🔥' : '—'}</Text>
-                    {streak > 0 && (
+                  <Text style={[styles.streakFreq, { color: COLORS.textSecondary }]}>
+                    {t(`habit.${habit.frequency}`)}
+                    {habit.frequency === 'weekly' && habit.weekDays && habit.weekDays.length > 0
+                      ? ` · ${habit.weekDays.length}j/sem`
+                      : ''}
+                  </Text>
+                </View>
+
+                {/* Streak badge */}
+                <View style={[
+                  styles.streakBadge,
+                  streak > 0
+                    ? { backgroundColor: habit.color + '20' }
+                    : { backgroundColor: COLORS.surface },
+                ]}>
+                  {streak > 0 ? (
+                    <>
+                      <Text style={styles.streakFire}>🔥</Text>
                       <Text style={[styles.streakCount, { color: habit.color }]}>
                         {t('stats.streakDays', { count: streak })}
                       </Text>
-                    )}
-                    {streak === 0 && (
-                      <Text style={styles.streakNone}>{t('stats.streakNone')}</Text>
-                    )}
-                  </View>
+                    </>
+                  ) : (
+                    <Text style={styles.streakNone}>{t('stats.streakNone')}</Text>
+                  )}
                 </View>
-              );
-            })
-          )}
-        </View>
+              </View>
+            );
+          })
+        )}
 
-        {/* ── Section Graphique 7 jours (premium) ── */}
+        {/* ── Graphique 7 jours (premium) ── */}
         <PremiumSection
           locked={!isPremium}
           title={t('stats.graphTitle')}
@@ -91,7 +105,7 @@ export default function StatsScreen() {
           <StatGraph data={last7Stats} dayLabels={dayLabels} color={COLORS.primary} />
         </PremiumSection>
 
-        {/* ── Section Heatmap mois (premium) ── */}
+        {/* ── Heatmap mois (premium) ── */}
         <PremiumSection
           locked={!isPremium}
           title={t('stats.heatmapTitle')}
@@ -109,7 +123,7 @@ export default function StatsScreen() {
   );
 }
 
-// ── Composant wrapper premium ────────────────────────────────────────────────
+// ── Section premium ──────────────────────────────────────────────────────────
 
 interface PremiumSectionProps {
   locked: boolean;
@@ -122,38 +136,28 @@ interface PremiumSectionProps {
   children: React.ReactNode;
 }
 
-function PremiumSection({
-  locked,
-  title,
-  premiumTitle,
-  premiumDesc,
-  upgradeLabel,
-  surfaceColor,
-  textColor,
-  children,
-}: PremiumSectionProps) {
+function PremiumSection({ locked, title, premiumTitle, premiumDesc, upgradeLabel, surfaceColor, textColor, children }: PremiumSectionProps) {
   return (
-    <View style={[styles.card, { backgroundColor: surfaceColor }]}>
-      <Text style={[styles.sectionTitle, { color: textColor }]}>{title}</Text>
-
-      {/* Contenu — flouté si verrouillé */}
-      <View style={locked ? styles.lockedContent : undefined}>
-        {children}
-      </View>
-
-      {/* Overlay verrou pour les users gratuits */}
-      {locked && (
-        <View style={styles.lockOverlay}>
-          <Text style={styles.lockIcon}>🔒</Text>
-          <Text style={styles.lockTitle}>{premiumTitle}</Text>
-          <Text style={styles.lockDesc}>{premiumDesc}</Text>
-          {/* Phase 5 : ouvre la modale Google Play Billing */}
-          <Pressable style={styles.upgradeBtn}>
-            <Text style={styles.upgradeBtnText}>{upgradeLabel}</Text>
-          </Pressable>
+    <>
+      <Text style={[styles.sectionLabel, { color: COLORS.textSecondary }]}>
+        {title.toUpperCase()}
+      </Text>
+      <View style={[styles.card, { backgroundColor: surfaceColor, overflow: 'hidden' }]}>
+        <View style={locked ? styles.lockedContent : undefined}>
+          {children}
         </View>
-      )}
-    </View>
+        {locked && (
+          <View style={styles.lockOverlay}>
+            <Text style={styles.lockIcon}>🔒</Text>
+            <Text style={[styles.lockTitle, { color: textColor }]}>{premiumTitle}</Text>
+            <Text style={styles.lockDesc}>{premiumDesc}</Text>
+            <Pressable style={styles.upgradeBtn}>
+              <Text style={styles.upgradeBtnText}>{upgradeLabel}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    </>
   );
 }
 
@@ -163,49 +167,73 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: {
     padding: SPACING.md,
-    gap: SPACING.md,
+    gap: SPACING.sm,
     paddingBottom: SPACING.xxl,
   },
   title: {
     fontSize: TYPOGRAPHY.fontSizeXXL,
     fontWeight: TYPOGRAPHY.fontWeightBold,
     marginTop: SPACING.sm,
+    marginBottom: SPACING.xs,
   },
-
-  // ── Cards ──
-  card: {
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    gap: SPACING.sm,
-    overflow: 'hidden', // pour que l'overlay soit clippé dans la card
-  },
-  sectionTitle: {
-    fontSize: TYPOGRAPHY.fontSizeLG,
+  sectionLabel: {
+    fontSize: TYPOGRAPHY.fontSizeXS,
     fontWeight: TYPOGRAPHY.fontWeightBold,
+    letterSpacing: 1,
+    marginTop: SPACING.sm,
+    marginBottom: 2,
   },
 
-  // ── Streaks ──
-  streakRow: {
+  emptyCard: {
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSizeMD,
+  },
+
+  // ── Streak card ──
+  streakCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.xs,
-    gap: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
+    marginBottom: SPACING.xs,
+    minHeight: 60,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  streakDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  streakBar: {
+    width: 4,
+    alignSelf: 'stretch',
+  },
+  streakInfo: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm + 2,
+    gap: 2,
   },
   streakName: {
-    flex: 1,
     fontSize: TYPOGRAPHY.fontSizeMD,
+    fontWeight: TYPOGRAPHY.fontWeightMedium,
+  },
+  streakFreq: {
+    fontSize: TYPOGRAPHY.fontSizeXS,
   },
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.full,
+    marginRight: SPACING.md,
   },
-  streakEmoji: { fontSize: 16 },
+  streakFire: { fontSize: 16 },
   streakCount: {
     fontSize: TYPOGRAPHY.fontSizeSM,
     fontWeight: TYPOGRAPHY.fontWeightBold,
@@ -214,29 +242,28 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSizeSM,
     color: COLORS.textSecondary,
   },
-  emptyText: {
-    fontSize: TYPOGRAPHY.fontSizeMD,
-    color: COLORS.textSecondary,
-  },
 
-  // ── Premium lock ──
+  // ── Premium card ──
+  card: {
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+  },
   lockedContent: {
-    opacity: 0.15,
+    opacity: 0.12,
     pointerEvents: 'none',
   },
   lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     gap: SPACING.xs,
     padding: SPACING.md,
-    backgroundColor: 'rgba(255,255,255,0.08)',
   },
-  lockIcon: { fontSize: 32 },
+  lockIcon: { fontSize: 28 },
   lockTitle: {
     fontSize: TYPOGRAPHY.fontSizeLG,
     fontWeight: TYPOGRAPHY.fontWeightBold,
-    color: COLORS.text,
     textAlign: 'center',
   },
   lockDesc: {

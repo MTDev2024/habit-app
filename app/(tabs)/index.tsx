@@ -3,53 +3,83 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { usePremiumStore, FREE_HABIT_LIMIT } from '../../store/usePremiumStore';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
-import { formatDisplayDate } from '../../utils/dateUtils';
+import { getTodayKey, formatDisplayDate } from '../../utils/dateUtils';
 import LandscapeHeader from '../../components/LandscapeHeader';
 import ProgressRing from '../../components/ProgressRing';
 import HabitItem from '../../components/HabitItem';
+import ConfettiOverlay from '../../components/ConfettiOverlay';
+
+// Salutations selon l'heure locale
+function getGreeting(hour: number, t: (key: string) => string): string {
+  if (hour < 5) return t('today.greetingNight');
+  if (hour < 12) return t('today.greetingMorning');
+  if (hour < 18) return t('today.greetingAfternoon');
+  return t('today.greetingEvening');
+}
+
+// Extrait le prénom depuis l'email (avant le @) ou le displayName
+function getFirstName(email: string | null, displayName: string | null): string {
+  if (displayName) return displayName.split(' ')[0];
+  if (email) return email.split('@')[0];
+  return '';
+}
 
 /**
  * Écran principal "Aujourd'hui" (Dashboard).
- *
- * Compose :
- *  - LandscapeHeader : paysage dynamique selon heure + saison
- *  - ProgressRing    : anneau animé de complétion journalière
- *  - Liste HabitItem : habitudes du jour avec cases à cocher animées
- *  - FAB "+"         : navigue vers la création d'une habitude
  */
 export default function TodayScreen() {
   const { isDarkMode } = useThemeStore();
   const { getTodayHabits, getTodayCompletionRate, toggleHabit } = useHabitsStore();
+  const { user } = useAuthStore();
   const { isPremium } = usePremiumStore();
   const { t, i18n } = useTranslation();
+
   const displayDate = formatDisplayDate(new Date(), i18n.language);
+  const hour = new Date().getHours();
+  const greeting = getGreeting(hour, t);
+  const firstName = getFirstName(user?.email ?? null, user?.displayName ?? null);
 
   const todayHabits = getTodayHabits();
   const isAtLimit = !isPremium && todayHabits.length >= FREE_HABIT_LIMIT;
-
   const completionRate = getTodayCompletionRate();
-  const done = todayHabits.filter(
-    (h) => h.completedDates.includes(new Date().toISOString().split('T')[0])
-  ).length;
+  const today = getTodayKey();
+  const done = todayHabits.filter((h) => h.completedDates.includes(today)).length;
   const total = todayHabits.length;
+  const allDone = completionRate === 1 && total > 0;
 
   const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
   const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
   const surfaceColor = isDarkMode ? COLORS.surfaceDark : COLORS.surface;
 
+  // Message de motivation selon la progression
+  const motivationKey = allDone
+    ? 'today.motivationDone'
+    : done === 0
+    ? 'today.motivationStart'
+    : done < total / 2
+    ? 'today.motivationKeepGoing'
+    : 'today.motivationAlmostThere';
+
   return (
     <View style={[styles.screen, { backgroundColor: bgColor }]}>
 
-      {/* ── Header paysage dynamique ── */}
       <LandscapeHeader />
 
-      {/* ── Contenu scrollable ── */}
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
+        {/* Salutation */}
+        <View style={styles.greetingSection}>
+          <Text style={[styles.greeting, { color: textColor }]}>
+            {greeting}{firstName ? `, ${firstName}` : ''}
+          </Text>
+          <Text style={[styles.motivation, { color: COLORS.textSecondary }]}>
+            {t(motivationKey)}
+          </Text>
+        </View>
+
         {/* Anneau de progression */}
         <View style={[styles.ringSection, { backgroundColor: surfaceColor }]}>
           <ProgressRing
@@ -59,24 +89,28 @@ export default function TodayScreen() {
             color={COLORS.primary}
             trackColor={isDarkMode ? COLORS.borderDark : COLORS.border}
           />
-          {completionRate === 1 && total > 0 && (
-            <Text style={[styles.allDoneText, { color: COLORS.primary }]}>
-              {t('today.allDone')}
-            </Text>
-          )}
         </View>
 
-        {/* Liste des habitudes */}
+        {/* Section habitudes */}
         <View style={styles.habitsSection}>
-          <Text style={[styles.sectionTitle, { color: textColor }]}>
-            {t('today.habitsTitle')}
-          </Text>
-          <Text style={styles.dateText}>{displayDate}</Text>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>
+                {t('today.habitsTitle')}
+              </Text>
+              <Text style={styles.dateText}>{displayDate}</Text>
+            </View>
+            {total > 0 && (
+              <View style={[styles.countBadge, { backgroundColor: COLORS.primary + '18' }]}>
+                <Text style={[styles.countText, { color: COLORS.primary }]}>{done}/{total}</Text>
+              </View>
+            )}
+          </View>
 
           {todayHabits.length === 0 ? (
-            // État vide
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>{t('today.noHabits')}</Text>
+              <Text style={styles.emptyIcon}>✦</Text>
+              <Text style={[styles.emptyText, { color: textColor }]}>{t('today.noHabits')}</Text>
               <Text style={styles.emptyHint}>{t('today.addFirst')}</Text>
             </View>
           ) : (
@@ -85,13 +119,14 @@ export default function TodayScreen() {
             ))
           )}
         </View>
+
       </ScrollView>
 
-      {/* ── Bouton flottant "+" ── */}
+      {/* FAB "+" */}
       <Pressable
         style={({ pressed }) => [
           styles.fab,
-          isAtLimit && styles.fabLocked,
+          { backgroundColor: isAtLimit ? COLORS.textSecondary : COLORS.primary },
           pressed && styles.fabPressed,
         ]}
         onPress={() => router.push('/habit/new')}
@@ -100,36 +135,49 @@ export default function TodayScreen() {
         <Text style={styles.fabIcon}>{isAtLimit ? '🔒' : '+'}</Text>
       </Pressable>
 
+      {/* Confettis — affichés quand toutes les habitudes sont complétées */}
+      <ConfettiOverlay visible={allDone} />
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
+  screen: { flex: 1 },
   content: {
-    padding: SPACING.md,
-    paddingBottom: SPACING.xxl + SPACING.xl, // espace pour le FAB
+    paddingBottom: SPACING.xxl + SPACING.xl,
     gap: SPACING.md,
   },
 
-  // ── Anneau de progression ──
-  ringSection: {
-    alignItems: 'center',
-    padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
-    gap: SPACING.sm,
+  greetingSection: {
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.sm,
+    gap: 2,
   },
-  allDoneText: {
-    fontSize: TYPOGRAPHY.fontSizeMD,
+  greeting: {
+    fontSize: TYPOGRAPHY.fontSizeXL,
     fontWeight: TYPOGRAPHY.fontWeightBold,
-    textAlign: 'center',
+  },
+  motivation: {
+    fontSize: TYPOGRAPHY.fontSizeSM,
   },
 
-  // ── Section habitudes ──
+  ringSection: {
+    alignItems: 'center',
+    marginHorizontal: SPACING.md,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+  },
+
   habitsSection: {
-    gap: SPACING.xs,
+    paddingHorizontal: SPACING.md,
+    gap: SPACING.sm,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xs,
   },
   sectionTitle: {
     fontSize: TYPOGRAPHY.fontSizeLG,
@@ -138,26 +186,37 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: TYPOGRAPHY.fontSizeSM,
     color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
+    marginTop: 1,
+  },
+  countBadge: {
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  countText: {
+    fontSize: TYPOGRAPHY.fontSizeSM,
+    fontWeight: TYPOGRAPHY.fontWeightBold,
   },
 
-  // ── État vide ──
   emptyState: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,
     gap: SPACING.xs,
   },
+  emptyIcon: {
+    fontSize: 32,
+    color: COLORS.textLight,
+    marginBottom: SPACING.sm,
+  },
   emptyText: {
     fontSize: TYPOGRAPHY.fontSizeMD,
-    color: COLORS.textSecondary,
+    fontWeight: TYPOGRAPHY.fontWeightMedium,
   },
   emptyHint: {
     fontSize: TYPOGRAPHY.fontSizeSM,
     color: COLORS.textSecondary,
-    opacity: 0.7,
   },
 
-  // ── Bouton flottant ──
   fab: {
     position: 'absolute',
     bottom: SPACING.xl,
@@ -165,16 +224,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.primary,
-  },
-  fabLocked: {
-    backgroundColor: COLORS.textSecondary,
     alignItems: 'center',
     justifyContent: 'center',
-    // Ombre
-    shadowColor: COLORS.primary,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
   },
@@ -186,6 +240,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 28,
     fontWeight: TYPOGRAPHY.fontWeightBold,
-    lineHeight: 32,
+    lineHeight: 34,
   },
 });

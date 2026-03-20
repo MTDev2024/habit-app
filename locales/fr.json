@@ -13,7 +13,19 @@
     "completedOf": "{{done}} / {{total}}",
     "allDone": "Toutes les habitudes complétées !",
     "noHabits": "Aucune habitude pour aujourd'hui",
-    "addFirst": "Ajoutez votre première habitude"
+    "addFirst": "Ajoutez votre première habitude",
+    "greetingMorning": "Bonjour",
+    "greetingAfternoon": "Bon après-midi",
+    "greetingEvening": "Bonsoir",
+    "greetingNight": "Bonne nuit",
+    "motivationStart": "Prêt à construire de bonnes habitudes ?",
+    "motivationKeepGoing": "Bien parti, continue !",
+    "motivationAlmostThere": "Presque terminé, tu y es !",
+    "motivationDone": "Bravo, toutes tes habitudes sont complétées !",
+    "habitCreated": "Habitude créée",
+    "habitUpdated": "Modifications enregistrées",
+    "habitDeleted": "Habitude supprimée",
+    "limitReached": "Limite atteinte — passez Premium pour plus d'habitudes"
   },
   "stats": {
     "title": "Statistiques",
@@ -84,6 +96,12 @@
     "nameTooShort": "Minimum 2 caractères",
     "weekDaysLabel": "Jours de la semaine",
     "weekDaysRequired": "Sélectionnez au moins un jour",
-    "days": ["L", "M", "M", "J", "V", "S", "D"]
+    "days": ["L", "M", "M", "J", "V", "S", "D"],
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Pourquoi cette habitude ? (optionnel)",
+    "reminderLabel": "Rappel",
+    "reminderHint": "Disponible avec les notifications (Phase 4)",
+    "reminderNone": "Pas de rappel",
+    "reminderAt": "Rappel à"
   }
 }

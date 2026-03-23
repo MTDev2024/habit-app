@@ -1,5 +1,5 @@
 // Nom de l'app — à remplacer ici quand le nom final est choisi
-export const APP_NAME = 'habit-app';
+export const APP_NAME = 'Ritmo';
 
 // Couleurs par catégorie d'habitude (définies dans CLAUDE.md)
 export const CATEGORY_COLORS = {

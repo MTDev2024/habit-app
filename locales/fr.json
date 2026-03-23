@@ -114,5 +114,9 @@
     "resetHistoryTitle": "Réinitialiser l'historique",
     "resetHistoryConfirm": "Effacer toutes les dates de complétion de \"{{name}}\" ? Le streak sera perdu.",
     "resetHistoryDone": "Historique réinitialisé"
+  },
+  "notifications": {
+    "motivationBody": "Tu as encore le temps de compléter tes habitudes aujourd'hui !",
+    "permissionDenied": "Active les notifications pour recevoir tes rappels d'habitudes."
   }
 }

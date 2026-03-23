@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -8,6 +8,11 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { COLORS } from '../constants/app';
 import Toast from '../components/Toast';
+import {
+  setupAndroidChannels,
+  requestNotificationPermissions,
+  scheduleMotivationNotification,
+} from '../services/notifications';
 
 // Initialise i18n au démarrage de l'app — doit être importé ici, une seule fois
 import '../utils/i18n';
@@ -29,6 +34,22 @@ export default function RootLayout() {
   useEffect(() => {
     const unsubscribe = init();
     return unsubscribe;
+  }, []);
+
+  // Configure les notifications au démarrage (Android uniquement pour les canaux)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    async function initNotifications() {
+      await setupAndroidChannels();
+      const granted = await requestNotificationPermissions();
+      if (granted) {
+        // Planifie la motivation quotidienne à 20h
+        await scheduleMotivationNotification(
+          'Tu as encore le temps de compléter tes habitudes aujourd\'hui !'
+        );
+      }
+    }
+    initNotifications();
   }, []);
 
   if (!fontsLoaded && !fontError) return null;

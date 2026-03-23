@@ -114,5 +114,9 @@
     "resetHistoryTitle": "Reset history",
     "resetHistoryConfirm": "Clear all completion dates for \"{{name}}\"? The streak will be lost.",
     "resetHistoryDone": "History reset"
+  },
+  "notifications": {
+    "motivationBody": "You still have time to complete your habits today!",
+    "permissionDenied": "Enable notifications to receive your habit reminders."
   }
 }

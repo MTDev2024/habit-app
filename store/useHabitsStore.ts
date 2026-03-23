@@ -12,6 +12,11 @@ import {
   logHabitCreated,
   logStreakMilestone,
 } from '../services/analytics';
+import {
+  scheduleHabitReminder,
+  cancelHabitReminder,
+  cancelMotivationNotification,
+} from '../services/notifications';
 
 // ── Type d'une habitude ──────────────────────────────────────────────────────
 export interface Habit {
@@ -92,12 +97,16 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     // Persistance Firestore + analytics en arrière-plan
     if (userId) await saveHabit(userId, newHabit);
     logHabitCreated(newHabit.name, newHabit.category);
+    // Planifie le rappel si une heure est définie
+    await scheduleHabitReminder(newHabit.id, newHabit.name, newHabit.reminderTime);
   },
 
   removeHabit: async (id) => {
     const { userId } = get();
     set((state) => ({ habits: state.habits.filter((h) => h.id !== id) }));
     if (userId) await deleteHabit(userId, id);
+    // Annule la notification associée
+    await cancelHabitReminder(id);
   },
 
   updateHabit: async (id, changes) => {
@@ -108,6 +117,11 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
       ),
     }));
     if (userId) await patchHabit(userId, id, changes);
+    // Reprogramme la notification si l'heure de rappel a changé
+    if ('reminderTime' in changes) {
+      const habit = get().habits.find((h) => h.id === id);
+      if (habit) await scheduleHabitReminder(id, habit.name, changes.reminderTime);
+    }
   },
 
   toggleHabit: async (id) => {
@@ -137,6 +151,10 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         ? getCurrentStreakWeekly(newDates, habit.weekDays ?? [])
         : getCurrentStreak(newDates);
       logStreakMilestone(habit.name, streak);
+
+      // Si toutes les habitudes du jour sont complétées, annule la notif de motivation
+      const rate = get().getTodayCompletionRate();
+      if (rate >= 1) await cancelMotivationNotification();
     }
   },
 

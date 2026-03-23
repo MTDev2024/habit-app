@@ -1,47 +1,129 @@
-import { View, Text, Switch, Pressable, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TextInput, Switch, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import { usePremiumStore, FREE_HABIT_LIMIT } from '../../store/usePremiumStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useToastStore } from '../../store/useToastStore';
 import { logout } from '../../services/auth';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 
 /**
  * Écran Profil / Paramètres.
  *
- * Phase 2 : toggle dark mode + statut abonnement (gratuit / premium).
- * Phase 3 : connexion Firebase, avatar, déconnexion.
- * Phase 5 : bouton "Passer Premium" → Google Play Billing.
+ * - Section profil : prénom modifiable via Firebase updateProfile
+ * - Toggle dark mode
+ * - Statut abonnement (gratuit / premium)
+ * - Déconnexion
  */
 export default function ProfileScreen() {
   const { isDarkMode, toggleTheme } = useThemeStore();
-  const { getTodayHabits } = useHabitsStore();
+  const { habits } = useHabitsStore();
   const { isPremium } = usePremiumStore();
-  const { user } = useAuthStore();
+  const { user, updateDisplayName } = useAuthStore();
+  const { show } = useToastStore();
   const { t } = useTranslation();
+
+  // Prénom local — pré-rempli depuis Firebase displayName
+  const [firstName, setFirstName] = useState(
+    user?.displayName ? user.displayName.split(' ')[0] : ''
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
+  const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
+  const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
+  const surfaceColor = isDarkMode ? COLORS.surfaceDark : COLORS.surface;
+  const borderColor = isDarkMode ? COLORS.borderDark : COLORS.border;
+
+  // Le compte des habitudes porte sur le total (pas seulement aujourd'hui)
+  const habitCount = habits.length;
+
+  // Valeur initiale du prénom pour détecter si une modification a eu lieu
+  const originalFirstName = user?.displayName ? user.displayName.split(' ')[0] : '';
+  const hasChanged = firstName.trim() !== originalFirstName;
+
+  const initial = firstName
+    ? firstName.charAt(0).toUpperCase()
+    : (user?.email?.charAt(0).toUpperCase() ?? '?');
+
+  async function handleSaveName() {
+    const trimmed = firstName.trim();
+    if (!trimmed || !hasChanged) return;
+    setIsSaving(true);
+    try {
+      await updateDisplayName(trimmed);
+      show(t('profile.nameSaved'), 'success');
+    } catch {
+      show(t('auth.errorGeneric'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   async function handleLogout() {
     await logout();
     // La redirection vers /auth/login est automatique via le Redirect dans (tabs)/_layout.tsx
   }
 
-  const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
-  const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
-  const surfaceColor = isDarkMode ? COLORS.surfaceDark : COLORS.surface;
-
-  const habitCount = getTodayHabits().length;
-
   return (
-    <View style={[styles.screen, { backgroundColor: bgColor }]}>
+    <ScrollView
+      style={[styles.screen, { backgroundColor: bgColor }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+
+      {/* ── Section Profil ── */}
+      <View style={[styles.section, { backgroundColor: surfaceColor }]}>
+        <Text style={[styles.sectionTitle, { color: COLORS.textSecondary }]}>
+          {t('profile.profileSection').toUpperCase()}
+        </Text>
+
+        {/* Avatar + champs */}
+        <View style={styles.profileRow}>
+          {/* Avatar initiale */}
+          <View style={[styles.avatar, { backgroundColor: COLORS.primary + '20' }]}>
+            <Text style={[styles.avatarLetter, { color: COLORS.primary }]}>{initial}</Text>
+          </View>
+
+          {/* Prénom + email */}
+          <View style={styles.profileFields}>
+            <TextInput
+              style={[styles.firstNameInput, { color: textColor, borderBottomColor: borderColor }]}
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder={t('profile.firstNamePlaceholder')}
+              placeholderTextColor={COLORS.textLight}
+              maxLength={30}
+              returnKeyType="done"
+              onSubmitEditing={handleSaveName}
+            />
+            {user?.email ? (
+              <Text style={[styles.emailText, { color: COLORS.textSecondary }]}>{user.email}</Text>
+            ) : null}
+          </View>
+        </View>
+
+        {/* Bouton Enregistrer — visible uniquement si le prénom a changé */}
+        {hasChanged && (
+          <Pressable
+            style={[styles.saveNameBtn, { backgroundColor: COLORS.primary }]}
+            onPress={handleSaveName}
+            disabled={isSaving}
+          >
+            <Text style={styles.saveNameBtnText}>
+              {isSaving ? '...' : t('profile.saveName')}
+            </Text>
+          </Pressable>
+        )}
+      </View>
 
       {/* ── Paramètres ── */}
       <View style={[styles.section, { backgroundColor: surfaceColor }]}>
         <Text style={[styles.sectionTitle, { color: COLORS.textSecondary }]}>
-          {t('profile.settings')}
+          {t('profile.settings').toUpperCase()}
         </Text>
 
-        {/* Toggle dark mode */}
         <View style={styles.row}>
           <Text style={[styles.rowLabel, { color: textColor }]}>{t('profile.darkMode')}</Text>
           <Switch
@@ -69,7 +151,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Barre de progression des habitudes (plan gratuit uniquement) */}
         {!isPremium && (
           <View style={styles.usageBarBg}>
             <View
@@ -84,7 +165,6 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* CTA upgrade (plan gratuit uniquement) — Phase 5 : ouvre le paywall */}
         {!isPremium && (
           <Pressable style={styles.upgradeBtn}>
             <Text style={styles.upgradeBtnText}>{t('profile.upgrade')}</Text>
@@ -92,28 +172,89 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Email de l'utilisateur connecté */}
-      {user?.email && (
-        <Text style={[styles.userEmail, { color: COLORS.textSecondary }]}>
-          {user.email}
-        </Text>
-      )}
-
       {/* Bouton déconnexion */}
       <Pressable style={styles.logoutBtn} onPress={handleLogout}>
         <Text style={styles.logoutBtnText}>{t('profile.logoutBtn')}</Text>
       </Pressable>
 
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  screen: { flex: 1 },
+  content: {
     padding: SPACING.md,
     paddingTop: SPACING.lg,
     gap: SPACING.md,
+    paddingBottom: SPACING.xxl,
+  },
+
+  // ── Section générique ──
+  section: {
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    gap: SPACING.sm,
+  },
+  sectionTitle: {
+    fontSize: TYPOGRAPHY.fontSizeXS,
+    fontWeight: TYPOGRAPHY.fontWeightBold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+
+  // ── Profil ──
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarLetter: {
+    fontSize: TYPOGRAPHY.fontSizeXL,
+    fontWeight: TYPOGRAPHY.fontWeightBold,
+  },
+  profileFields: {
+    flex: 1,
+    gap: 4,
+  },
+  firstNameInput: {
+    fontSize: TYPOGRAPHY.fontSizeMD,
+    fontWeight: TYPOGRAPHY.fontWeightMedium,
+    borderBottomWidth: 1,
+    paddingVertical: 4,
+  },
+  emailText: {
+    fontSize: TYPOGRAPHY.fontSizeXS,
+  },
+  saveNameBtn: {
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+  },
+  saveNameBtnText: {
+    color: '#FFFFFF',
+    fontSize: TYPOGRAPHY.fontSizeMD,
+    fontWeight: TYPOGRAPHY.fontWeightBold,
+  },
+
+  // ── Paramètres ──
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  rowLabel: {
+    fontSize: TYPOGRAPHY.fontSizeMD,
+    fontWeight: TYPOGRAPHY.fontWeightMedium,
   },
 
   // ── Plan card ──
@@ -148,8 +289,6 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSizeSM,
     color: COLORS.textSecondary,
   },
-
-  // Barre de progression habitudes
   usageBarBg: {
     height: 6,
     backgroundColor: COLORS.border,
@@ -160,8 +299,6 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: BORDER_RADIUS.full,
   },
-
-  // Bouton upgrade
   upgradeBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: SPACING.sm,
@@ -175,37 +312,7 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.fontWeightBold,
   },
 
-  // ── Section paramètres ──
-  section: {
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    gap: SPACING.sm,
-  },
-  sectionTitle: {
-    fontSize: TYPOGRAPHY.fontSizeXS,
-    fontWeight: TYPOGRAPHY.fontWeightBold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  rowLabel: {
-    fontSize: TYPOGRAPHY.fontSizeMD,
-    fontWeight: TYPOGRAPHY.fontWeightMedium,
-  },
-  note: {
-    fontSize: TYPOGRAPHY.fontSizeSM,
-    textAlign: 'center',
-    marginTop: SPACING.sm,
-  },
-  userEmail: {
-    fontSize: TYPOGRAPHY.fontSizeSM,
-    textAlign: 'center',
-  },
+  // ── Déconnexion ──
   logoutBtn: {
     borderWidth: 1,
     borderColor: COLORS.error,

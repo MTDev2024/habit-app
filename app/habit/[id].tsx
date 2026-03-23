@@ -13,6 +13,7 @@ import { COLORS } from '../../constants/app';
  * Écran d'édition d'une habitude existante.
  * Long press depuis HabitItem → cet écran.
  * Bouton "Supprimer" dans le header → modale de confirmation.
+ * Reset de l'historique → accessible depuis l'écran Statistiques.
  */
 export default function EditHabitScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,8 +24,9 @@ export default function EditHabitScreen() {
 
   const habit = habits.find((h) => h.id === id);
 
+  // Sur web, router.back() plante si la pile est vide. On utilise replace vers la racine.
   if (!habit) {
-    router.back();
+    router.replace('/');
     return null;
   }
 

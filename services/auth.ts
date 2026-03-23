@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
   User,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -22,6 +23,14 @@ export async function registerWithEmail(email: string, password: string): Promis
 export async function loginWithEmail(email: string, password: string): Promise<User> {
   const credential = await signInWithEmailAndPassword(auth, email, password);
   return credential.user;
+}
+
+/**
+ * Met à jour le displayName de l'utilisateur connecté (prénom visible dans l'app).
+ */
+export async function updateUserDisplayName(displayName: string): Promise<void> {
+  if (!auth.currentUser) return;
+  await updateProfile(auth.currentUser, { displayName });
 }
 
 /**

@@ -15,9 +15,8 @@
     "noHabits": "No habits for today",
     "addFirst": "Add your first habit",
     "greetingMorning": "Good morning",
-    "greetingAfternoon": "Good afternoon",
+    "greetingAfternoon": "Hey",
     "greetingEvening": "Good evening",
-    "greetingNight": "Good night",
     "motivationStart": "Ready to build great habits?",
     "motivationKeepGoing": "Good start, keep going!",
     "motivationAlmostThere": "Almost there, you've got this!",
@@ -25,7 +24,8 @@
     "habitCreated": "Habit created",
     "habitUpdated": "Changes saved",
     "habitDeleted": "Habit deleted",
-    "limitReached": "Limit reached — upgrade to Premium for more habits"
+    "limitReached": "Limit reached — upgrade to Premium for more habits",
+    "habitCreatedWeekly": "Habit created — will appear on scheduled days"
   },
   "stats": {
     "title": "Statistics",
@@ -42,6 +42,11 @@
   },
   "profile": {
     "title": "Profile",
+    "profileSection": "Profile",
+    "firstName": "First name",
+    "firstNamePlaceholder": "Your first name",
+    "saveName": "Save",
+    "nameSaved": "Name saved",
     "planFree": "Free Plan",
     "planPremium": "Premium Plan ⭐",
     "habitUsage": "{{count}} / {{max}} habits used",
@@ -102,6 +107,10 @@
     "reminderLabel": "Reminder",
     "reminderHint": "Available with notifications (Phase 4)",
     "reminderNone": "No reminder",
-    "reminderAt": "Reminder at"
+    "reminderAt": "Reminder at",
+    "resetHistoryBtn": "Reset history",
+    "resetHistoryTitle": "Reset history",
+    "resetHistoryConfirm": "Clear all completion dates for \"{{name}}\"? The streak will be lost.",
+    "resetHistoryDone": "History reset"
   }
 }

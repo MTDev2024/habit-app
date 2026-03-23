@@ -48,6 +48,8 @@ interface HabitsState {
   updateHabit: (id: string, changes: Partial<Omit<Habit, 'id' | 'createdAt' | 'completedDates'>>) => Promise<void>;
   toggleHabit: (id: string) => Promise<void>;
 
+  resetHabitHistory: (id: string) => Promise<void>;
+
   getTodayHabits: () => Habit[];
   getTodayCompletionRate: () => number;
 }
@@ -136,6 +138,16 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         : getCurrentStreak(newDates);
       logStreakMilestone(habit.name, streak);
     }
+  },
+
+  resetHabitHistory: async (id) => {
+    const { userId } = get();
+    set((state) => ({
+      habits: state.habits.map((h) =>
+        h.id === id ? { ...h, completedDates: [] } : h
+      ),
+    }));
+    if (userId) await patchHabit(userId, id, { completedDates: [] });
   },
 
   getTodayHabits: () => {

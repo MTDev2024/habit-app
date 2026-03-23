@@ -13,13 +13,13 @@ import HabitForm, { HabitFormValues } from '../../components/HabitForm';
  */
 export default function NewHabitScreen() {
   const { t } = useTranslation();
-  const { addHabit, getTodayHabits } = useHabitsStore();
+  const { addHabit, habits } = useHabitsStore();
   const { isPremium } = usePremiumStore();
   const { show } = useToastStore();
 
   const handleSubmit = (values: HabitFormValues) => {
-    const currentCount = getTodayHabits().length;
-    if (!isPremium && currentCount >= FREE_HABIT_LIMIT) {
+    // Vérifie la limite sur le total des habitudes, pas seulement celles affichées aujourd'hui
+    if (!isPremium && habits.length >= FREE_HABIT_LIMIT) {
       show(t('today.limitReached'), 'error');
       return;
     }
@@ -36,7 +36,16 @@ export default function NewHabitScreen() {
       isPremiumFeature: false,
     });
 
-    show(t('today.habitCreated'), 'success');
+    // Pour une habitude hebdomadaire non prévue aujourd'hui, informe l'utilisateur
+    if (values.frequency === 'weekly') {
+      const jsDay = new Date().getDay();
+      const todayEU = jsDay === 0 ? 6 : jsDay - 1;
+      const visibleToday = values.weekDays.includes(todayEU);
+      show(t(visibleToday ? 'today.habitCreated' : 'today.habitCreatedWeekly'), 'success');
+    } else {
+      show(t('today.habitCreated'), 'success');
+    }
+
     router.back();
   };
 

@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
@@ -7,24 +8,17 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { usePremiumStore, FREE_HABIT_LIMIT } from '../../store/usePremiumStore';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 import { getTodayKey, formatDisplayDate } from '../../utils/dateUtils';
-import LandscapeHeader from '../../components/LandscapeHeader';
+import LandscapeHeader, { LANDSCAPE_HEADER_HEIGHT } from '../../components/LandscapeHeader';
+import AppLogo from '../../components/AppLogo';
 import ProgressRing from '../../components/ProgressRing';
 import HabitItem from '../../components/HabitItem';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
 
-// Salutations selon l'heure locale
+// Format 24h — Bonjour 05h-12h, Salut 12h-18h, Bonsoir 18h-05h
 function getGreeting(hour: number, t: (key: string) => string): string {
-  if (hour < 5) return t('today.greetingNight');
-  if (hour < 12) return t('today.greetingMorning');
-  if (hour < 18) return t('today.greetingAfternoon');
+  if (hour >= 5 && hour < 12) return t('today.greetingMorning');
+  if (hour >= 12 && hour < 18) return t('today.greetingAfternoon');
   return t('today.greetingEvening');
-}
-
-// Extrait le prénom depuis l'email (avant le @) ou le displayName
-function getFirstName(email: string | null, displayName: string | null): string {
-  if (displayName) return displayName.split(' ')[0];
-  if (email) return email.split('@')[0];
-  return '';
 }
 
 /**
@@ -32,7 +26,7 @@ function getFirstName(email: string | null, displayName: string | null): string 
  */
 export default function TodayScreen() {
   const { isDarkMode } = useThemeStore();
-  const { getTodayHabits, getTodayCompletionRate, toggleHabit } = useHabitsStore();
+  const { getTodayHabits, getTodayCompletionRate, toggleHabit, habits } = useHabitsStore();
   const { user } = useAuthStore();
   const { isPremium } = usePremiumStore();
   const { t, i18n } = useTranslation();
@@ -40,10 +34,12 @@ export default function TodayScreen() {
   const displayDate = formatDisplayDate(new Date(), i18n.language);
   const hour = new Date().getHours();
   const greeting = getGreeting(hour, t);
-  const firstName = getFirstName(user?.email ?? null, user?.displayName ?? null);
+  // Prénom uniquement depuis le displayName Firebase (jamais depuis l'email)
+  const firstName = user?.displayName ? user.displayName.split(' ')[0] : '';
 
   const todayHabits = getTodayHabits();
-  const isAtLimit = !isPremium && todayHabits.length >= FREE_HABIT_LIMIT;
+  // La limite porte sur le total des habitudes (pas seulement celles affichées aujourd'hui)
+  const isAtLimit = !isPremium && habits.length >= FREE_HABIT_LIMIT;
   const completionRate = getTodayCompletionRate();
   const today = getTodayKey();
   const done = todayHabits.filter((h) => h.completedDates.includes(today)).length;
@@ -54,31 +50,30 @@ export default function TodayScreen() {
   const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
   const surfaceColor = isDarkMode ? COLORS.surfaceDark : COLORS.surface;
 
-  // Message de motivation selon la progression
-  const motivationKey = allDone
-    ? 'today.motivationDone'
-    : done === 0
-    ? 'today.motivationStart'
-    : done < total / 2
-    ? 'today.motivationKeepGoing'
-    : 'today.motivationAlmostThere';
-
   return (
     <View style={[styles.screen, { backgroundColor: bgColor }]}>
 
-      <LandscapeHeader />
+      {/* ── Hero : paysage + overlay salutation ── */}
+      <View style={styles.hero}>
+        <LandscapeHeader />
+        {/* Dégradé sombre en bas pour que le texte soit lisible sur le paysage */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.52)']}
+          style={styles.heroGradient}
+          pointerEvents="none"
+        />
+        <View style={styles.heroOverlay} pointerEvents="none">
+          <AppLogo size={32} bgColor="#FFFFFF" checkColor={COLORS.primary} />
+          <View>
+            <Text style={styles.heroGreeting}>
+              {greeting}{firstName ? `, ${firstName}` : ''}
+            </Text>
+            <Text style={styles.heroDate}>{displayDate}</Text>
+          </View>
+        </View>
+      </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
-        {/* Salutation */}
-        <View style={styles.greetingSection}>
-          <Text style={[styles.greeting, { color: textColor }]}>
-            {greeting}{firstName ? `, ${firstName}` : ''}
-          </Text>
-          <Text style={[styles.motivation, { color: COLORS.textSecondary }]}>
-            {t(motivationKey)}
-          </Text>
-        </View>
 
         {/* Anneau de progression */}
         <View style={[styles.ringSection, { backgroundColor: surfaceColor }]}>
@@ -149,17 +144,40 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
 
-  greetingSection: {
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
-    gap: 2,
+  // ── Hero paysage avec overlay ──
+  hero: {
+    height: LANDSCAPE_HEADER_HEIGHT,
   },
-  greeting: {
-    fontSize: TYPOGRAPHY.fontSizeXL,
+  heroGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: LANDSCAPE_HEADER_HEIGHT * 0.65,
+  },
+  heroOverlay: {
+    position: 'absolute',
+    bottom: SPACING.md,
+    left: SPACING.md,
+    right: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  heroGreeting: {
+    color: '#FFFFFF',
+    fontSize: TYPOGRAPHY.fontSizeLG,
     fontWeight: TYPOGRAPHY.fontWeightBold,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  motivation: {
+  heroDate: {
+    color: 'rgba(255,255,255,0.85)',
     fontSize: TYPOGRAPHY.fontSizeSM,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   ringSection: {

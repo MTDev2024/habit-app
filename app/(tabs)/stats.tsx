@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
 import { usePremiumStore } from '../../store/usePremiumStore';
+import { useToastStore } from '../../store/useToastStore';
+import ConfirmModal from '../../components/ConfirmModal';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 import { getLast7DaysStats, getMonthCompletionMap, getDayLabel } from '../../utils/statsUtils';
 import { getCurrentStreak, getCurrentStreakWeekly } from '../../utils/dateUtils';
@@ -17,9 +20,20 @@ import HeatmapCalendar from '../../components/HeatmapCalendar';
  */
 export default function StatsScreen() {
   const { isDarkMode } = useThemeStore();
-  const { habits } = useHabitsStore();
+  const { habits, resetHabitHistory } = useHabitsStore();
   const { isPremium } = usePremiumStore();
+  const { show } = useToastStore();
   const { t, i18n } = useTranslation();
+
+  // Cible du reset en cours — null si aucune modale ouverte
+  const [resetTarget, setResetTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const handleReset = () => {
+    if (!resetTarget) return;
+    resetHabitHistory(resetTarget.id);
+    show(t('habit.resetHistoryDone'), 'info');
+    setResetTarget(null);
+  };
 
   const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
   const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
@@ -74,7 +88,7 @@ export default function StatsScreen() {
                   styles.streakBadge,
                   streak > 0
                     ? { backgroundColor: habit.color + '20' }
-                    : { backgroundColor: COLORS.surface },
+                    : { backgroundColor: surfaceColor },
                 ]}>
                   {streak > 0 ? (
                     <>
@@ -87,6 +101,14 @@ export default function StatsScreen() {
                     <Text style={styles.streakNone}>{t('stats.streakNone')}</Text>
                   )}
                 </View>
+
+                {/* Bouton reset discret */}
+                <Pressable
+                  style={styles.resetBtn}
+                  onPress={() => setResetTarget({ id: habit.id, name: habit.name })}
+                >
+                  <Text style={styles.resetBtnText}>↺</Text>
+                </Pressable>
               </View>
             );
           })
@@ -119,6 +141,16 @@ export default function StatsScreen() {
         </PremiumSection>
 
       </ScrollView>
+
+      <ConfirmModal
+        visible={!!resetTarget}
+        title={t('habit.resetHistoryTitle')}
+        message={t('habit.resetHistoryConfirm', { name: resetTarget?.name ?? '' })}
+        confirmLabel={t('habit.resetHistoryBtn')}
+        cancelLabel={t('habit.deleteCancel')}
+        onConfirm={handleReset}
+        onCancel={() => setResetTarget(null)}
+      />
     </View>
   );
 }
@@ -240,6 +272,14 @@ const styles = StyleSheet.create({
   },
   streakNone: {
     fontSize: TYPOGRAPHY.fontSizeSM,
+    color: COLORS.textSecondary,
+  },
+  resetBtn: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+  },
+  resetBtnText: {
+    fontSize: 18,
     color: COLORS.textSecondary,
   },
 

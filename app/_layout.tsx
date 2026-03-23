@@ -8,6 +8,7 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { COLORS } from '../constants/app';
 import Toast from '../components/Toast';
+import * as Notifications from 'expo-notifications';
 import {
   setupAndroidChannels,
   requestNotificationPermissions,
@@ -41,6 +42,14 @@ export default function RootLayout() {
     if (Platform.OS === 'web') return;
     async function initNotifications() {
       try {
+        // Configure le comportement des notifs reçues en premier plan
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+          }),
+        });
         await setupAndroidChannels();
         const granted = await requestNotificationPermissions();
         if (granted) {

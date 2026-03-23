@@ -1,15 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure le comportement des notifications quand l'app est au premier plan
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
 // Identifiant réservé pour la notification de motivation quotidienne
 const MOTIVATION_NOTIF_ID = 'ritmo-motivation-daily';
 

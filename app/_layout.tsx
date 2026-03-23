@@ -40,13 +40,18 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
     async function initNotifications() {
-      await setupAndroidChannels();
-      const granted = await requestNotificationPermissions();
-      if (granted) {
-        // Planifie la motivation quotidienne à 20h
-        await scheduleMotivationNotification(
-          'Tu as encore le temps de compléter tes habitudes aujourd\'hui !'
-        );
+      try {
+        await setupAndroidChannels();
+        const granted = await requestNotificationPermissions();
+        if (granted) {
+          // Planifie la motivation quotidienne à 20h
+          await scheduleMotivationNotification(
+            'Tu as encore le temps de compléter tes habitudes aujourd\'hui !'
+          );
+        }
+      } catch (e) {
+        // Les notifications ne sont pas critiques — l'app continue sans elles
+        console.warn('Notification init failed:', e);
       }
     }
     initNotifications();

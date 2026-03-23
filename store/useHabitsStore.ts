@@ -97,16 +97,15 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     // Persistance Firestore + analytics en arrière-plan
     if (userId) await saveHabit(userId, newHabit);
     logHabitCreated(newHabit.name, newHabit.category);
-    // Planifie le rappel si une heure est définie
-    await scheduleHabitReminder(newHabit.id, newHabit.name, newHabit.reminderTime);
+    // Planifie le rappel si une heure est définie (silencieux en cas d'erreur)
+    scheduleHabitReminder(newHabit.id, newHabit.name, newHabit.reminderTime).catch(() => {});
   },
 
   removeHabit: async (id) => {
     const { userId } = get();
     set((state) => ({ habits: state.habits.filter((h) => h.id !== id) }));
     if (userId) await deleteHabit(userId, id);
-    // Annule la notification associée
-    await cancelHabitReminder(id);
+    cancelHabitReminder(id).catch(() => {});
   },
 
   updateHabit: async (id, changes) => {
@@ -120,7 +119,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     // Reprogramme la notification si l'heure de rappel a changé
     if ('reminderTime' in changes) {
       const habit = get().habits.find((h) => h.id === id);
-      if (habit) await scheduleHabitReminder(id, habit.name, changes.reminderTime);
+      if (habit) scheduleHabitReminder(id, habit.name, changes.reminderTime).catch(() => {});
     }
   },
 
@@ -154,7 +153,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
 
       // Si toutes les habitudes du jour sont complétées, annule la notif de motivation
       const rate = get().getTodayCompletionRate();
-      if (rate >= 1) await cancelMotivationNotification();
+      if (rate >= 1) cancelMotivationNotification().catch(() => {});
     }
   },
 

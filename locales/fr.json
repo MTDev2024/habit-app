@@ -77,7 +77,9 @@
     "errorUserNotFound": "Aucun compte trouvé pour cet email",
     "errorEmailInUse": "Cette adresse email est déjà utilisée",
     "errorWeakPassword": "Le mot de passe doit contenir au moins 6 caractères",
-    "errorGeneric": "Une erreur est survenue. Réessayez."
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "orDivider": "ou",
+    "googleBtn": "Continuer avec Google"
   },
   "habit": {
     "new": "Nouvelle habitude",

@@ -4,9 +4,24 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithCredential,
   User,
 } from 'firebase/auth';
 import { auth } from './firebase';
+
+// Client IDs Google (issus de google-services.json)
+export const GOOGLE_ANDROID_CLIENT_ID = '241501315547-erkhd9fpihtea78h69ovkp351s7iaf0i.apps.googleusercontent.com';
+export const GOOGLE_WEB_CLIENT_ID = '241501315547-qpev4o9rbadnjlocfbn1anjv2tubv9pt.apps.googleusercontent.com';
+
+/**
+ * Connecte ou crée un compte via Google (id_token issu de expo-auth-session).
+ */
+export async function signInWithGoogle(idToken: string): Promise<User> {
+  const credential = GoogleAuthProvider.credential(idToken);
+  const result = await signInWithCredential(auth, credential);
+  return result.user;
+}
 
 /**
  * Crée un nouveau compte utilisateur avec email + mot de passe.

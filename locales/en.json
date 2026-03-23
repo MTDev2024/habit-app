@@ -77,7 +77,9 @@
     "errorUserNotFound": "No account found for this email",
     "errorEmailInUse": "This email address is already in use",
     "errorWeakPassword": "Password must be at least 6 characters",
-    "errorGeneric": "An error occurred. Please try again."
+    "errorGeneric": "An error occurred. Please try again.",
+    "orDivider": "or",
+    "googleBtn": "Continue with Google"
   },
   "habit": {
     "new": "New habit",

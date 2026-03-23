@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { loginWithEmail } from '../../services/auth';
+import { useThemeStore } from '../../store/useThemeStore';
 import { APP_NAME, COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../constants/app';
 
 /**
@@ -55,6 +56,13 @@ function getErrorKey(code: string): string {
 
 export default function LoginScreen() {
   const { t } = useTranslation();
+  const { isDarkMode } = useThemeStore();
+
+  const bgColor = isDarkMode ? COLORS.backgroundDark : COLORS.background;
+  const cardColor = isDarkMode ? COLORS.surfaceDark : '#fff';
+  const textColor = isDarkMode ? COLORS.textDark : COLORS.text;
+  const inputBg = isDarkMode ? '#2A2A2A' : COLORS.surface;
+  const borderColor = isDarkMode ? COLORS.borderDark : COLORS.border;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,7 +83,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.flex, { backgroundColor: bgColor }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -86,19 +94,19 @@ export default function LoginScreen() {
         {/* ── En-tête : icône + nom + tagline ── */}
         <View style={styles.header}>
           <AppIcon />
-          <Text style={styles.appName}>{APP_NAME}</Text>
+          <Text style={[styles.appName, { color: textColor }]}>{APP_NAME}</Text>
           <Text style={styles.tagline}>{t('auth.tagline')}</Text>
         </View>
 
         {/* ── Carte formulaire ── */}
-        <View style={styles.card}>
-          <Text style={styles.screenTitle}>{t('auth.loginTitle')}</Text>
+        <View style={[styles.card, { backgroundColor: cardColor }]}>
+          <Text style={[styles.screenTitle, { color: textColor }]}>{t('auth.loginTitle')}</Text>
 
           {/* Champ email */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('auth.emailLabel')}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: textColor, backgroundColor: inputBg, borderColor }]}
               placeholder={t('auth.emailPlaceholder')}
               placeholderTextColor={COLORS.textLight}
               value={email}
@@ -114,7 +122,7 @@ export default function LoginScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('auth.passwordLabel')}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: textColor, backgroundColor: inputBg, borderColor }]}
               placeholder={t('auth.passwordPlaceholder')}
               placeholderTextColor={COLORS.textLight}
               value={password}

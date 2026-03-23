@@ -33,6 +33,13 @@
     "plugins": [
       "expo-router",
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "99d6760a-7b07-439a-ae28-91a9d586fd04"
+      }
+    },
+    "owner": "mt.dev.2023"
   }
 }

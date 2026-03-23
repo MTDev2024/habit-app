@@ -1,4 +1,4 @@
-# Prompt — Habit App (habit-app)
+# Prompt — Ritmo (habit-app)
 
 ## 🎯 Contexte et mode de collaboration
 
@@ -13,7 +13,25 @@ Je suis développeur junior en formation (parcours JavaScript React), je veux ap
 - Les messages de commit doivent être descriptifs et professionnels, sans mention d'IA ou d'outil tiers
 
 **Repo GitHub :** https://github.com/MTDev2024/habit-app
-**Nom provisoire de l'app :** habit-app (le nom final sera choisi plus tard, prévoir une constante APP_NAME facile à remplacer)
+**Nom de l'app :** Ritmo
+**Package Android :** com.mtdev.ritmo
+**Compte Expo :** mt.dev.2023
+**EAS Project ID :** 99d6760a-7b07-439a-ae28-91a9d586fd04
+
+---
+
+## ✅ État d'avancement
+
+| Phase | Statut | Notes |
+|---|---|---|
+| Phase 1 — Setup & Architecture | ✅ Terminé | Expo Router, Zustand, i18n FR/EN, dark mode |
+| Phase 2 — Écrans principaux | ✅ Terminé | Dashboard, stats, profil, création/édition habitude |
+| Phase 3 — Firebase | ✅ Terminé | Auth email + Google Sign-In, Firestore sync, Analytics |
+| Phase 4 — Notifications | ✅ Terminé | expo-notifications, rappels habitudes, motivation 20h |
+| Phase 5 — Monétisation | 🔜 En cours | AdMob + Google Play Billing |
+| Phase 6 — Polish & ASO | ⏳ À venir | Badges, habitudes suggérées, screenshots Play Store |
+
+**Dernier build EAS :** preview Android — build #2 (Google Sign-In + notifications)
 
 ---
 
@@ -160,11 +178,13 @@ users/{userId}/
     theme: 'light' | 'dark'
 ```
 
-### Phase 4 — Notifications
-- Firebase Cloud Messaging (FCM)
-- Notifications push planifiées selon l'heure de rappel de chaque habitude
-- Gestion des permissions (Android 13+)
-- Notification de motivation si aucune habitude cochée après 20h
+### Phase 4 — Notifications ✅
+- `expo-notifications` (notifications locales planifiées — pas de serveur FCM requis)
+- Canaux Android configurés : `habits` (haute priorité) + `motivation` (priorité normale)
+- Rappel quotidien par habitude à l'heure définie (`reminderTime`)
+- Notification de motivation à 20h si les habitudes du jour ne sont pas toutes cochées
+- Annulation automatique de la motivation quand toutes les habitudes sont complétées
+- Permissions demandées au démarrage (Android 13+)
 
 ### Phase 5 — Monétisation
 

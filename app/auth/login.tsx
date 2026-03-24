@@ -75,7 +75,6 @@ export default function LoginScreen() {
 
   // ── Google Sign-In ──
   const [_request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     webClientId: GOOGLE_WEB_CLIENT_ID,
   });
 

@@ -28,8 +28,10 @@ Je suis développeur junior en formation (parcours JavaScript React), je veux ap
 | Phase 2 — Écrans principaux | ✅ Terminé | Dashboard, stats, profil, création/édition habitude |
 | Phase 3 — Firebase | ✅ Terminé | Auth email + Google Sign-In, Firestore sync, Analytics |
 | Phase 4 — Notifications | ✅ Terminé | expo-notifications, rappels habitudes, motivation 20h |
-| Phase 5 — Monétisation | 🔜 En cours | AdMob + Google Play Billing |
-| Phase 6 — Polish & ASO | ⏳ À venir | Badges, habitudes suggérées, screenshots Play Store |
+| Phase 5 — Avant la sortie | 🔜 À venir | Onboarding, habitudes suggérées, badges, templates |
+| Phase 6 — Monétisation | ⏳ À venir | AdMob + Google Play Billing + paywall |
+| Phase 7 — Différenciation & Publication | ⏳ À venir | Widget, journal, partage, Play Store |
+| Phase 8 — v2 | ⏳ À venir | IA, social, iOS |
 
 **Dernier build EAS :** preview Android — build #2 (Google Sign-In + notifications)
 
@@ -186,26 +188,30 @@ users/{userId}/
 - Annulation automatique de la motivation quand toutes les habitudes sont complétées
 - Permissions demandées au démarrage (Android 13+)
 
-### Phase 5 — Monétisation
+### Phase 5 — Avant la sortie (expérience utilisateur)
+- Onboarding : 2-3 écrans au 1er lancement (valeur de l'app, permissions, langue)
+- 50 habitudes suggérées : sélection guidée au démarrage, pas de page blanche
+- Icône / emoji personnalisable par habitude
+- Badges & récompenses : 7j, 30j, 100j streak avec animation feu d'artifice
+- Templates de routines : "Routine matinale", "Routine sportive", etc.
+- Rapport hebdomadaire : notif chaque lundi avec résumé de la semaine
+
+### Phase 6 — Monétisation
 
 #### Publicité AdMob (users gratuits uniquement)
-Trois formats combinés, chacun à un moment précis :
-
 | Format | Emplacement | Déclencheur | RPM estimé |
 |---|---|---|---|
 | Bannière | Bas du dashboard | Toujours visible | 0,50–2€/1 000 vues |
 | Interstitielle | Plein écran | 1 ouverture sur 3 (min 3 min entre deux) | 3–8€/1 000 vues |
-| Rewarded | Bouton opt-in sur stats/habitudes | À la demande de l'user | 5–15€/1 000 vues |
+| Rewarded | Bouton opt-in | À la demande de l'user | 5–15€/1 000 vues |
 
-- Interstitielle : jamais en plein milieu d'une action, toujours sur une transition naturelle
-- Rewarded : l'user regarde une pub (15–30s non skippable) en échange d'un accès temporaire à une feature premium (ex : stats complètes 24h, habitude bonus 24h)
-- Catégories de pubs sensibles à exclure dans AdMob (alcool, jeux d'argent)
-- Revenu pub estimé à 1 000 users actifs/jour : ~75€/mois
+- Interstitielle : toujours sur une transition naturelle, jamais en plein milieu d'une action
+- Rewarded : accès temporaire 24h à une feature premium (habitudes illimitées, stats complètes)
+- Catégories sensibles à exclure dans AdMob (alcool, jeux d'argent)
 
 #### Abonnement Premium (Google Play Billing)
 - **Mensuel : 2,99€/mois**
-- **Annuel : 17,99€/an** (−50%, mise en avant)
-- Pas d'achat unique — modèle abonnement pour revenu récurrent
+- **Annuel : 17,99€/an** (−50%, mis en avant)
 
 #### Features free vs premium
 | Feature | Free | Premium |
@@ -213,24 +219,37 @@ Trois formats combinés, chacun à un moment précis :
 | Habitudes | 5 max | Illimitées |
 | Rappels | Aucun | Illimités |
 | Statistiques | Streak uniquement | Heatmap + graphiques hebdo |
-| Export | ✗ | PDF |
-| Thèmes | Clair / sombre | +3 thèmes de couleur |
-| Catégories custom | ✗ | ✓ (Phase 6) |
+| Rapport hebdomadaire | ✗ | ✓ |
+| Export PDF | ✗ | ✓ |
 | Publicités | Bannière + interstitielle | Aucune |
 
 #### UX du paywall
-- Icône cadenas discret sur les features premium dans l'UI
-- Tap sur une feature verrouillée → modale paywall élégante (pas un popup agressif)
-- Rewarded ads : l'user peut "goûter" une feature premium gratuitement → conversion naturelle
-- Conversion cible : 2–3% → 200–300€/mois (abonnements) + ~75€/mois (pubs)
+- Cadenas discret sur les features premium
+- Tap → modale paywall élégante (pas un popup agressif)
+- Rewarded ads : "goûter" le premium → conversion naturelle
 
-### Phase 6 — Polish & ASO
-- 50 habitudes suggérées au démarrage (liste intégrée, voir ci-dessous)
-- Badges et système de récompenses complet
-- Animations finales soignées
-- Optimisation des performances
-- Screenshots Play Store
-- Description ASO optimisée avec mots-clés : productivité, motivation, routines, bien-être, habitudes
+### Phase 7 — Différenciation & Publication
+
+#### Différenciation
+- Widget Android : habitudes du jour sur l'écran d'accueil
+- Journal rapide : note courte après avoir coché une habitude
+- Objectifs groupés : lier des habitudes sous un objectif commun
+- Couleur personnalisée par habitude
+- Rappels intelligents : notif à l'heure habituelle de l'utilisateur
+- Partage social : streak en image (marketing organique)
+
+#### Publication Play Store
+- ASO : description optimisée (productivité, routines, bien-être, habitudes)
+- Screenshots Play Store soignés (5-8 visuels)
+- Icône finale Ritmo définitive
+- Politique de confidentialité (obligatoire Play Store)
+
+### Phase 8 — Évolutions futures (v2)
+- Insights IA : analyse des patterns ("Tu es plus régulier le matin")
+- Défis entre amis : gamification sociale
+- Google Fit / Health Connect : auto-complétion habitudes sportives
+- Thèmes de couleur supplémentaires (3 thèmes premium)
+- iOS : portage App Store
 
 ---
 

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "241501315547",
+    "project_id": "habit-app-76a97",
+    "storage_bucket": "habit-app-76a97.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241501315547:android:adddd94f21df683da147fe",
+        "android_client_info": {
+          "package_name": "com.mtdev.ritmo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "241501315547-erkhd9fpihtea78h69ovkp351s7iaf0i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mtdev.ritmo",
+            "certificate_hash": "1b833ba17af5d48c8e33a31b4e3742574a788753"
+          }
+        },
+        {
+          "client_id": "241501315547-qpev4o9rbadnjlocfbn1anjv2tubv9pt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1-Y4-sXF290z1a9alJfJVICDD9SSY8M4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241501315547-qpev4o9rbadnjlocfbn1anjv2tubv9pt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

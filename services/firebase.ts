@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Configuration Firebase.
@@ -20,5 +21,13 @@ const firebaseConfig = {
 // Évite la double initialisation en mode hot-reload
 export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const auth = getAuth(app);
+/**
+ * Initialise Firebase Auth avec persistance AsyncStorage.
+ * La session survit aux redémarrages de l'app — l'utilisateur reste connecté
+ * jusqu'à ce qu'il se déconnecte explicitement.
+ */
+export const auth = getApps().length === 1
+  ? initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) })
+  : getAuth(app);
+
 export const db = getFirestore(app);

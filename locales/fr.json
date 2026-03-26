@@ -115,6 +115,20 @@
     "resetHistoryConfirm": "Effacer toutes les dates de complétion de \"{{name}}\" ? Le streak sera perdu.",
     "resetHistoryDone": "Historique réinitialisé"
   },
+  "onboarding": {
+    "welcomeTitle": "Bienvenue sur Ritmo",
+    "welcomeSubtitle": "La méthode simple pour construire de meilleures habitudes, un jour à la fois.",
+    "welcomeBtn": "Commencer →",
+    "notifTitle": "Ne manquez aucun rappel",
+    "notifSubtitle": "Ritmo vous rappelle vos habitudes au bon moment pour rester dans le rythme.",
+    "notifBtn": "Activer les notifications",
+    "notifSkip": "Plus tard",
+    "habitsTitle": "Quelles habitudes voulez-vous adopter ?",
+    "habitsSubtitle": "Sélectionnez quelques habitudes pour commencer. Vous pourrez en ajouter d'autres à tout moment.",
+    "habitsBtn": "C'est parti !",
+    "habitsSkip": "Passer",
+    "step": "{{current}} / {{total}}"
+  },
   "notifications": {
     "motivationBody": "Tu as encore le temps de compléter tes habitudes aujourd'hui !",
     "permissionDenied": "Active les notifications pour recevoir tes rappels d'habitudes."

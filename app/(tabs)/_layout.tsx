@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-// View gardé pour les spinners de chargement uniquement
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
@@ -18,6 +18,15 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuthStore();
   const { loadHabits, clearHabits, isLoading: habitsLoading } = useHabitsStore();
+
+  // Vérifie si l'onboarding a déjà été vu (null = vérification en cours)
+  const [onboardingChecked, setOnboardingChecked] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem('hasSeenOnboarding').then((val) => {
+      setOnboardingChecked(val === 'true');
+    });
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -37,6 +46,18 @@ export default function TabsLayout() {
   }
 
   if (!user) return <Redirect href="/auth/login" />;
+
+  // Spinner pendant la vérification AsyncStorage
+  if (onboardingChecked === null) {
+    return (
+      <View style={[styles.loader, { backgroundColor: COLORS.background }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  // Premier lancement → onboarding
+  if (!onboardingChecked) return <Redirect href="/onboarding" />;
 
   // Spinner pendant le chargement initial des habitudes Firestore
   if (habitsLoading) {

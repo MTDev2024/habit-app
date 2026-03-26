@@ -98,7 +98,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     if (userId) await saveHabit(userId, newHabit);
     logHabitCreated(newHabit.name, newHabit.category);
     // Planifie le rappel si une heure est définie (silencieux en cas d'erreur)
-    scheduleHabitReminder(newHabit.id, newHabit.name, newHabit.reminderTime).catch(() => {});
+    scheduleHabitReminder(newHabit.id, newHabit.name, newHabit.reminderTime, newHabit.frequency, newHabit.weekDays).catch(() => {});
   },
 
   removeHabit: async (id) => {
@@ -119,7 +119,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     // Reprogramme la notification si l'heure de rappel a changé
     if ('reminderTime' in changes) {
       const habit = get().habits.find((h) => h.id === id);
-      if (habit) scheduleHabitReminder(id, habit.name, changes.reminderTime).catch(() => {});
+      if (habit) scheduleHabitReminder(id, habit.name, changes.reminderTime, habit.frequency, habit.weekDays).catch(() => {});
     }
   },
 

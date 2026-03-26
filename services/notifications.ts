@@ -36,49 +36,86 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   return status === 'granted';
 }
 
+// Jours EU (0=lundi…6=dimanche) → weekday expo-notifications (1=dim, 2=lun…7=sam)
+function euDayToNotifWeekday(euDay: number): number {
+  return euDay === 6 ? 1 : euDay + 2;
+}
+
 /**
- * Planifie une notification quotidienne récurrente pour une habitude.
- * Si une notification existait déjà pour cet ID, elle est remplacée.
- * N'agit pas si l'habitude n'a pas d'heure de rappel.
+ * Planifie le(s) rappel(s) pour une habitude.
+ * - Habitude quotidienne : une notif DAILY à l'heure définie.
+ * - Habitude hebdomadaire : une notif WEEKLY par jour configuré.
+ * Remplace toute notification existante pour cet ID.
  */
 export async function scheduleHabitReminder(
   habitId: string,
   habitName: string,
   reminderTime: string | null | undefined,
+  frequency: 'daily' | 'weekly' = 'daily',
+  weekDays: number[] = [],
 ): Promise<void> {
-  // Annule toujours l'ancienne notif en premier
+  // Annule toujours les anciennes notifs en premier
   await cancelHabitReminder(habitId);
 
   if (!reminderTime) return;
 
   const [hours, minutes] = reminderTime.split(':').map(Number);
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: `habit-${habitId}`,
-    content: {
-      title: 'Ritmo',
-      body: habitName,
-      sound: true,
-      data: { habitId },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour: hours,
-      minute: minutes,
-      channelId: 'habits',
-    },
-  });
+  if (frequency === 'weekly' && weekDays.length > 0) {
+    // Une notification par jour de la semaine configuré
+    for (const euDay of weekDays) {
+      await Notifications.scheduleNotificationAsync({
+        identifier: `habit-${habitId}-day-${euDay}`,
+        content: {
+          title: 'Ritmo',
+          body: habitName,
+          sound: true,
+          data: { habitId },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+          weekday: euDayToNotifWeekday(euDay),
+          hour: hours,
+          minute: minutes,
+          channelId: 'habits',
+        },
+      });
+    }
+  } else {
+    // Habitude quotidienne : une seule notif récurrente
+    await Notifications.scheduleNotificationAsync({
+      identifier: `habit-${habitId}`,
+      content: {
+        title: 'Ritmo',
+        body: habitName,
+        sound: true,
+        data: { habitId },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: hours,
+        minute: minutes,
+        channelId: 'habits',
+      },
+    });
+  }
 }
 
 /**
- * Annule le rappel d'une habitude.
+ * Annule tous les rappels d'une habitude (daily ou weekly multi-jours).
  * Silencieux si aucune notification n'existait.
  */
 export async function cancelHabitReminder(habitId: string): Promise<void> {
+  // Annule la notif quotidienne
   try {
     await Notifications.cancelScheduledNotificationAsync(`habit-${habitId}`);
-  } catch {
-    // Notification inexistante — pas d'erreur à remonter
+  } catch { /* Notification inexistante */ }
+
+  // Annule les notifs hebdomadaires (jours 0 à 6)
+  for (let day = 0; day <= 6; day++) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(`habit-${habitId}-day-${day}`);
+    } catch { /* Notification inexistante */ }
   }
 }
 

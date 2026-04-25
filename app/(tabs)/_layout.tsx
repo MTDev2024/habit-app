@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useHabitsStore } from '../../store/useHabitsStore';
+import { getUserProfile } from '../../services/user';
+import { useBadgesStore } from '../../store/useBadgesStore';
+import BadgeModal from '../../components/BadgeModal';
 import { COLORS } from '../../constants/app';
 
 /**
@@ -18,28 +21,56 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuthStore();
   const { loadHabits, clearHabits, isLoading: habitsLoading } = useHabitsStore();
+  const { pendingBadge, clearPendingBadge, loadEarnedBadges, clearBadges } = useBadgesStore();
 
   // Vérifie si l'onboarding a déjà été vu (null = vérification en cours)
   const [onboardingChecked, setOnboardingChecked] = useState<boolean | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem('hasSeenOnboarding').then((val) => {
-      setOnboardingChecked(val === 'true');
-    });
-  }, []);
+    if (!user) return;
+
+    const cacheKey = `hasSeenOnboarding_${user.uid}`;
+
+    async function checkOnboarding() {
+      // Cache local d'abord — évite une lecture Firestore à chaque démarrage
+      const cached = await AsyncStorage.getItem(cacheKey);
+      if (cached === 'true') {
+        setOnboardingChecked(true);
+        return;
+      }
+      // Pas en cache → lecture Firestore (premier lancement ou nouvel appareil)
+      try {
+        const profile = await getUserProfile(user!.uid);
+        const seen = profile?.hasSeenOnboarding ?? false;
+        if (seen) {
+          await AsyncStorage.setItem(cacheKey, 'true');
+        }
+        // Charge les badges déjà gagnés dans le store
+        loadEarnedBadges(profile?.earnedBadges ?? []);
+        setOnboardingChecked(seen);
+      } catch {
+        setOnboardingChecked(true);
+      }
+    }
+
+    checkOnboarding();
+  }, [user?.uid]);
 
   useEffect(() => {
     if (user) {
       loadHabits(user.uid);
     } else {
       clearHabits();
+      clearBadges();
     }
   }, [user?.uid]);
+
+  const loaderStyle = { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const };
 
   // Spinner pendant la vérification Firebase Auth
   if (authLoading) {
     return (
-      <View style={[styles.loader, { backgroundColor: COLORS.background }]}>
+      <View style={[loaderStyle, { backgroundColor: COLORS.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -47,10 +78,10 @@ export default function TabsLayout() {
 
   if (!user) return <Redirect href="/auth/login" />;
 
-  // Spinner pendant la vérification AsyncStorage
+  // Spinner pendant la vérification AsyncStorage / Firestore
   if (onboardingChecked === null) {
     return (
-      <View style={[styles.loader, { backgroundColor: COLORS.background }]}>
+      <View style={[loaderStyle, { backgroundColor: COLORS.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -62,7 +93,7 @@ export default function TabsLayout() {
   // Spinner pendant le chargement initial des habitudes Firestore
   if (habitsLoading) {
     return (
-      <View style={[styles.loader, { backgroundColor: isDarkMode ? COLORS.backgroundDark : COLORS.background }]}>
+      <View style={[loaderStyle, { backgroundColor: isDarkMode ? COLORS.backgroundDark : COLORS.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -74,7 +105,9 @@ export default function TabsLayout() {
   const borderColor = isDarkMode ? COLORS.borderDark : COLORS.border;
 
   return (
-    <Tabs
+    <>
+      <BadgeModal badge={pendingBadge} onClose={clearPendingBadge} />
+      <Tabs
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
@@ -120,15 +153,7 @@ export default function TabsLayout() {
             ),
           }}
         />
-    </Tabs>
+      </Tabs>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});

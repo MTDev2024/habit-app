@@ -14,6 +14,8 @@ import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, APP_NAME } from '../constan
 import { SUGGESTED_HABITS } from '../constants/suggestedHabits';
 import { getCategoryByKey } from '../constants/categories';
 import { useHabitsStore } from '../store/useHabitsStore';
+import { useAuthStore } from '../store/useAuthStore';
+import { markOnboardingSeen } from '../services/user';
 import { requestNotificationPermissions } from '../services/notifications';
 import AppLogo from '../components/AppLogo';
 
@@ -26,6 +28,7 @@ const TOTAL_STEPS = 3;
 export default function OnboardingScreen() {
   const { t, i18n } = useTranslation();
   const { addHabit } = useHabitsStore();
+  const { user } = useAuthStore();
 
   const [step, setStep] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -47,7 +50,17 @@ export default function OnboardingScreen() {
     setStep(2);
   }
 
+  function markSeen() {
+    if (!user) return;
+    const cacheKey = `hasSeenOnboarding_${user.uid}`;
+    // AsyncStorage est immédiat — la navigation ne sera pas bloquée
+    AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
+    // Firestore en arrière-plan — une erreur réseau ne bloque pas l'utilisateur
+    markOnboardingSeen(user.uid).catch(() => {});
+  }
+
   async function handleFinish() {
+    markSeen();
     // Ajoute les habitudes sélectionnées au store
     const selected = SUGGESTED_HABITS.filter((h) => selectedIds.has(h.id));
     for (const habit of selected) {
@@ -62,14 +75,11 @@ export default function OnboardingScreen() {
         reminderTime: undefined,
       });
     }
-
-    // Marque l'onboarding comme vu
-    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
     router.replace('/');
   }
 
-  async function handleSkip() {
-    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+  function handleSkip() {
+    markSeen();
     router.replace('/');
   }
 
@@ -129,6 +139,7 @@ export default function OnboardingScreen() {
             style={styles.habitsList}
             contentContainerStyle={styles.habitsGrid}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             {SUGGESTED_HABITS.map((habit) => {
               const selected = selectedIds.has(habit.id);
@@ -138,14 +149,14 @@ export default function OnboardingScreen() {
                   key={habit.id}
                   style={[
                     styles.habitChip,
-                    selected && { backgroundColor: color + '20', borderColor: color },
+                    selected && { backgroundColor: color, borderColor: color },
                   ]}
                   onPress={() => toggleHabit(habit.id)}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
                   <Text style={styles.habitEmoji}>{habit.emoji}</Text>
                   <Text
-                    style={[styles.habitName, selected && { color, fontWeight: '600' }]}
+                    style={[styles.habitName, selected && { color: '#fff', fontWeight: '600' }]}
                     numberOfLines={2}
                   >
                     {habit[lang]}

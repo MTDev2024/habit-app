@@ -17,6 +17,7 @@ import {
   cancelHabitReminder,
   cancelMotivationNotification,
 } from '../services/notifications';
+import { useBadgesStore } from './useBadgesStore';
 
 // ── Type d'une habitude ──────────────────────────────────────────────────────
 export interface Habit {
@@ -150,6 +151,11 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         ? getCurrentStreakWeekly(newDates, habit.weekDays ?? [])
         : getCurrentStreak(newDates);
       logStreakMilestone(habit.name, streak);
+
+      // Vérifie si ce streak débloque un badge (7j, 30j, 100j)
+      if (userId) {
+        useBadgesStore.getState().checkAndUnlock(streak, userId).catch(() => {});
+      }
 
       // Si toutes les habitudes du jour sont complétées, annule la notif de motivation
       const rate = get().getTodayCompletionRate();
